@@ -12,7 +12,7 @@ import java.io._
 /**
  * Contract for a navigation service. Implementations define how the navigation is build.
  */
-trait Navigation {
+trait NavigationService {
 
     /**
      * Returns the root navigation point.
@@ -30,7 +30,7 @@ trait Navigation {
 /**
  * Default implementation of the navigation service.
  */
-class DefaultNavigation @Inject() (val definitions: Seq[NavigationPointDefinition]) extends Navigation {
+class DefaultNavigationService @Inject() (val definitions: Seq[NavigationPointDefinition]) extends NavigationService {
     
     def root: NavigationPoint = create(Root)
 
@@ -237,12 +237,12 @@ trait NavigationPoint {
 }
 
 /**
- * Mixin trait to provide the active navigation point.
+ * Mixin trait to provide a navigation point.
  */
-trait ActiveNavigationPoint {
+trait Navigation {
     
     /**
-     * the active navigation point. Never null.
+     * a navigation point. Never null.
      */
-    def activeNavigationPoint: NavigationPoint
+    def navigationPoint: NavigationPoint
 }
