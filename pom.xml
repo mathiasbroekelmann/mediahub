@@ -31,7 +31,7 @@
   <modules>
     <module>poms</module>
     <module>provision</module>
-    <module>org.scala-lang.scala-library</module>
+    <module>bundles</module>
   </modules>
 
   <build>
@@ -123,6 +123,11 @@
         <groupId>com.google.inject</groupId>
         <artifactId>guice</artifactId>
         <version>${guice.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ops4j</groupId>
+        <artifactId>peaberry</artifactId>
+        <version>1.1.1</version>
       </dependency>
       <dependency>
         <groupId>commons-lang</groupId>
