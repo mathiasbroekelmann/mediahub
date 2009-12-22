@@ -20,6 +20,14 @@
         <testSourceDirectory>src/test/scala</testSourceDirectory>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.5</source>
+                    <target>1.5</target>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.scala-tools</groupId>
                 <artifactId>maven-scala-plugin</artifactId>
                 <executions>
@@ -68,8 +76,9 @@
                             | assume public classes are in the top package, and private classes are
                             under ".internal"
                         -->
-                        <Export-Package>!${bundle.namespace}.internal.*,${bundle.namespace}.*;version="${pom.version}"</Export-Package>
-                        <Private-Package>${bundle.namespace}.internal.*</Private-Package>
+                        <Export-Package>${bundle.namespace}.*;version="${pom.version}"</Export-Package>
+<!--                        <Export-Package>!${bundle.namespace}.internal.*,${bundle.namespace}.*;version="${pom.version}"</Export-Package>-->
+<!--                        <Private-Package>${bundle.namespace}.internal.*</Private-Package>-->
                         <!--
              | each module can override these defaults in their osgi.bnd file
             -->
@@ -95,5 +104,12 @@
             </resource>
         </resources>
     </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>
