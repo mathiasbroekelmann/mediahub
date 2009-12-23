@@ -11,12 +11,13 @@
   <groupId>de.osxp.dali.frontend</groupId>
   <artifactId>frontend</artifactId>
 
-  <name></name>
+  <name>de.osxp.dali.frontend</name>
 
   <packaging>pom</packaging>
 
   <modules>
     <module>html</module>
+    <module>resources</module>
   </modules>
 
 </project>

@@ -16,8 +16,10 @@
     <packaging>pom</packaging>
 
     <build>
+        <!-- 
         <sourceDirectory>src/main/scala</sourceDirectory>
         <testSourceDirectory>src/test/scala</testSourceDirectory>
+         -->
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -30,7 +32,15 @@
             <plugin>
                 <groupId>org.scala-tools</groupId>
                 <artifactId>maven-scala-plugin</artifactId>
+                <version>2.12</version>
                 <executions>
+                    <execution>
+                        <id>scala-add-source</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                    </execution>
                     <execution>
                         <goals>
                             <goal>compile</goal>
@@ -42,6 +52,9 @@
                     <scalaVersion>${scala.version}</scalaVersion>
                     <args>
                         <arg>-target:jvm-1.5</arg>
+                        <arg>-g:vars</arg>
+                        <arg>-optimise</arg>
+                        <arg>-explaintypes</arg>
                     </args>
                 </configuration>
             </plugin>

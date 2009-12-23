@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <parent>
+    <relativePath>../poms/wrappers/</relativePath>
+    <groupId>de.osxp.dali.build</groupId>
+    <artifactId>wrapper-bundle-settings</artifactId>
+    <version>1.0-SNAPSHOT</version>
+  </parent>
+
+  <properties>
+    <bundle.symbolicName>jmimemagic</bundle.symbolicName>
+    <wrapped.groupId>jmimemagic</wrapped.groupId>
+    <wrapped.artifactId>jmimemagic</wrapped.artifactId>
+    <wrapped.version>0.1.2</wrapped.version>
+  </properties>
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>de.osxp.dali.bundles</groupId>
+  <artifactId>jmimemagic</artifactId>
+  <version>0.1.2-001-SNAPSHOT</version>
+
+  <name>${bundle.symbolicName} ${wrapped.version} [osgi]</name>
+
+  <packaging>bundle</packaging>
+
+  <dependencies>
+    <dependency>
+      <groupId>${wrapped.groupId}</groupId>
+      <artifactId>${wrapped.artifactId}</artifactId>
+      <version>${wrapped.version}</version>
+      <optional>true</optional>
+    </dependency>
+  </dependencies>
+
+</project>

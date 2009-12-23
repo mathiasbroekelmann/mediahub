@@ -24,6 +24,7 @@
     <guice.version>2.0</guice.version>
     <cxf.version>2.2.5</cxf.version>
     <spring.version>2.5.6</spring.version>
+    <spring.dm.version>1.2.1</spring.dm.version>
   </properties>
 
   <packaging>pom</packaging>
@@ -44,6 +45,7 @@
         <configuration>
           <provision>
             <param>--platform=equinox</param>
+            <param>--vmOptions=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005</param>
           </provision>
         </configuration>
         <executions></executions>
@@ -118,12 +120,18 @@
       <dependency>
         <groupId>javax.ws.rs</groupId>
         <artifactId>jsr311-api</artifactId>
-        <version>1.1</version>
+        <version>1.0</version>
+        <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>com.google.inject</groupId>
         <artifactId>guice</artifactId>
         <version>${guice.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.ops4j</groupId>
+        <artifactId>peaberry</artifactId>
+        <version>1.1.1</version>
       </dependency>
       <dependency>
         <groupId>org.ops4j</groupId>
@@ -160,14 +168,29 @@
       <dependency>
         <groupId>org.osgi</groupId>
         <artifactId>org.osgi.core</artifactId>
-        <version>4.1.0</version>
+        <version>4.2.0</version>
         <scope>provided</scope>
       </dependency>
       <dependency>
         <groupId>org.osgi</groupId>
         <artifactId>org.osgi.compendium</artifactId>
-        <version>4.1.0</version>
+        <version>4.2.0</version>
         <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-core</artifactId>
+        <version>${spring.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.osgi</groupId>
+        <artifactId>spring-osgi-io</artifactId>
+        <version>${spring.dm.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>1.4</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
