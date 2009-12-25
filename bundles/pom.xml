@@ -21,6 +21,7 @@
     <module>de.osxp.dali.message</module>
     <module>de.osxp.dali.time</module>
     <module>jmimemagic</module>
+    <module>de.osxp.dali.album</module>
   </modules>
 
 </project>
