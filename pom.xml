@@ -25,6 +25,7 @@
     <cxf.version>2.2.5</cxf.version>
     <spring.version>2.5.6</spring.version>
     <spring.dm.version>1.2.1</spring.dm.version>
+    <bundles.configuration.location>${basedir}/src/main/configurations</bundles.configuration.location>
   </properties>
 
   <packaging>pom</packaging>
