@@ -19,12 +19,16 @@ import de.osxp.dali.page.{Page, ContentOfPage}
  * @since 25.12.2009
  *
  */
-object Navigation extends ContentOfPage[NavigationPoint] {
-    override def unspecifiedAt(page: Page): Option[NavigationPoint] = {
-        // TODO: get the navigation service to locate the root nav point.
-        None
+object Navigation extends ContentOfPage[NavigationPointDefinition] {
+    override def unspecifiedAt(page: Page): Option[NavigationPointDefinition] = {
+        Some(Root)
     }
 }
+
+/**
+ * Root navigation point definition.
+ */
+object Root extends NavigationPointDefinition(None) with OrderedChildren
 
 /**
  * Contract for a navigation service. Implementations define how the navigation is build.
@@ -175,11 +179,6 @@ trait OrderedChildren extends NavigationPointDefinition {
         super.children(if(ordering == null) navPoints else navPoints.sortWith(ordering))
     }
 }
-
-/**
- * Root navigation point definition.
- */
-object Root extends NavigationPointDefinition(None) with OrderedChildren
 
 /**
  * A NavigationPoint provides the contract for a single nav point in the navigation.

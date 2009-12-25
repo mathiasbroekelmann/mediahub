@@ -7,6 +7,7 @@ import core.MediaType._
 import scala.collection.immutable.Map
 
 import de.osxp.dali.navigation._
+import de.osxp.dali.page._
 
 @Path("album")
 object Album {
@@ -18,9 +19,11 @@ object Album {
 	}
 	
 	@Path("{path:.*}")
-	def album(@PathParam("path") path: String): Option[Album] = {
+	def album(@PathParam("path") path: String): Option[Page] = {
 	    // TODO: find a single album for a given path
-		None
+	    val navpoint = new NavigationPointDefinition(Root)
+	    var page = Page(Navigation, navpoint)
+	    Some(page.build)
 	}
 }
 

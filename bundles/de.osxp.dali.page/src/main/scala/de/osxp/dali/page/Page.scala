@@ -8,7 +8,7 @@ package de.osxp.dali.page
  * @since 25.12.2009
  *
  */
-abstract case class ContentOfPage[A] {
+abstract case class ContentOfPage[+A] {
     /**
      * Optionally provide a value for this content type if it is not defined for this type on the given page.
      * By default this method returns None
@@ -24,7 +24,7 @@ abstract case class ContentOfPage[A] {
  * @since 25.12.2009
  *
  */
-case class PageContent[A>:Any] extends ContentOfPage[A]
+case class PageContent[A<:Any] extends ContentOfPage[A]
 
 /**
  * Complement object to build the page content.
@@ -39,12 +39,12 @@ object Page {
     /**
      * build page with the given main content.
      */
-    def apply[A>:Any](pageContent: A): PageBuilder = apply(PageContent[A], pageContent)
+    def apply[A<:Any](pageContent: A): PageBuilder = apply(PageContent[A], pageContent)
     
     /**
      * build a page with a specific type of content.
      */
-    def apply[A>:Any](contentOfPage: ContentOfPage[A], value: A): PageBuilder = {
+    def apply[A<:Any, B<:ContentOfPage[A]](contentOfPage: B, value: A): PageBuilder = {
         val page = new PageBuilder {}
         page(contentOfPage) = value
         page
@@ -62,13 +62,16 @@ object Page {
         
         val content = scala.collection.mutable.Map[ContentOfPage[Any], Any]()
         
-        def update[A>:Any](contentOfPage: ContentOfPage[A], value: A) = content(contentOfPage) = value
+        def update[A<:Any, B<:ContentOfPage[A]](contentOfPage: B, value: A): PageBuilder = {
+            content(contentOfPage) = value
+            this
+        }
         
         def build: Page = {
             new Page {
                 val content = Map.empty ++ self.content
                 
-                def apply[A>:Any](contentOfPage: ContentOfPage[A]): Option[A] = 
+                def apply[A>:Any, B<:ContentOfPage[A]](contentOfPage: B): Option[A] = 
                     content.get(contentOfPage)
                            .orElse(contentOfPage.unspecifiedAt(this))
             }
@@ -87,5 +90,5 @@ trait Page {
      * 
      * @return None if no content is defined for this page, otherwise Some(content)
      */
-    def apply[A>:Any](contentOfPage: ContentOfPage[A]): Option[A]
+    def apply[A>:Any, B<:ContentOfPage[A]](contentOfPage: B): Option[A]
 }
