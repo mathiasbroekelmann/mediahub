@@ -20,7 +20,7 @@ trait NavigationService {
     def root: NavigationPoint
 
     /**
-     * Returns the root navigation point.
+     * Returns the navigation point for given definition.
      * 
      * @param active the active navigation point.
      */
