@@ -9,6 +9,23 @@ import org.apache.commons.lang.ClassUtils._
 
 import java.io._
 
+import de.osxp.dali.page.{Page, ContentOfPage}
+
+/**
+ * The main navigation part of a page
+ * 
+ * @author Mathias Broekelmann
+ *
+ * @since 25.12.2009
+ *
+ */
+object Navigation extends ContentOfPage[NavigationPoint] {
+    override def unspecifiedAt(page: Page): Option[NavigationPoint] = {
+        // TODO: get the navigation service to locate the root nav point.
+        None
+    }
+}
+
 /**
  * Contract for a navigation service. Implementations define how the navigation is build.
  */
@@ -234,15 +251,4 @@ trait NavigationPoint {
             }
         }
     }
-}
-
-/**
- * Mixin trait to provide a navigation point.
- */
-trait Navigation {
-    
-    /**
-     * a navigation point. Never null.
-     */
-    def navigationPoint: NavigationPoint
 }

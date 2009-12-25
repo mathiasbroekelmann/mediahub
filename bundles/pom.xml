@@ -23,6 +23,7 @@
     <module>jmimemagic</module>
     <module>de.osxp.dali.jackson</module>
     <module>de.osxp.dali.album</module>
+    <module>de.osxp.dali.page</module>
   </modules>
 
 </project>

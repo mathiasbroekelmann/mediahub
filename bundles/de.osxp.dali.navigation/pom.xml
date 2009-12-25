@@ -32,6 +32,10 @@
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
         </dependency>
+        <dependency>
+            <groupId>de.osxp.dali.bundles</groupId>
+            <artifactId>de.osxp.dali.page</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
