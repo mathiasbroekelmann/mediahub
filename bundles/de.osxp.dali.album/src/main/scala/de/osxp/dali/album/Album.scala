@@ -10,20 +10,21 @@ import de.osxp.dali.navigation._
 import de.osxp.dali.page._
 
 @Path("album")
-object Album {
-	
-	@GET
-	def albums: Seq[Album] = {
+object Alben extends NavigationPointDefinition(Root) {
+    
+    @GET
+	def albums: Page = {
 	    // TODO: find all albums
-		Seq.empty
+	    Page(Navigation).is(Alben).title("Alben").build
 	}
 	
+    @GET
 	@Path("{path:.*}")
-	def album(@PathParam("path") path: String): Option[Page] = {
+	def album(@PathParam("path") path: String): Page = {
 	    // TODO: find a single album for a given path
-	    val navpoint = new NavigationPointDefinition(Root)
-	    var page = Page(Navigation, navpoint)
-	    Some(page.build)
+	    var page = Page(Navigation).is(Alben)
+	    page(PageTitle).is("foo")
+	    page.build
 	}
 }
 

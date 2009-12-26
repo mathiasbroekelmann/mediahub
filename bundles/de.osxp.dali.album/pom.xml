@@ -41,6 +41,11 @@
             <groupId>de.osxp.dali.bundles</groupId>
             <artifactId>de.osxp.dali.page</artifactId>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
 	</dependencies>
 
 </project>
