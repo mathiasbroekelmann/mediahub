@@ -9,8 +9,10 @@ import scala.collection.immutable.Map
 import de.osxp.dali.navigation._
 import de.osxp.dali.page._
 
-@Path("album")
-object Alben extends NavigationPointDefinition(Root) {
+object Alben extends NavigationPointDefinition(Root)
+
+@Path("alben")
+class Alben {
     
     @GET
 	def albums: Page = {

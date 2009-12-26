@@ -10,7 +10,7 @@ import de.osxp.dali.navigation._
 class AlbumTest {
     @Test
     def test {
-        val albums = Alben.albums
+        val albums = new Alben().albums
         val contents = albums.contents
         val nav = albums(Navigation)
         assertThat(nav, is(Some(Alben).asInstanceOf[Option[NavigationPointDefinition]]))

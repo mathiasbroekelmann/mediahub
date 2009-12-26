@@ -32,6 +32,19 @@
             <groupId>de.osxp.dali.bundles</groupId>
             <artifactId>de.osxp.dali.page</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>osgi_R4_core</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j</groupId>
+            <artifactId>peaberry</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
