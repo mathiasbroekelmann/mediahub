@@ -14,8 +14,6 @@ import java.util.Date
 import java.io.OutputStream
 import java.net.URI
 
-import de.osxp.dali.frontend.resources.ResponseBuilders._
-
 import org.apache.commons.io.output.ByteArrayOutputStream
 
 import net.sf.jmimemagic.MagicMatchNotFoundException
@@ -50,6 +48,11 @@ trait Resource {
      * the uri of the resource.
      */
     def uri: java.net.URI
+    
+    /**
+     * the content type of this resource
+     */
+    def contentType: String
 }
 
 /**
@@ -91,11 +94,10 @@ class StaticResources @Inject() (val loader: ResourceLoader) {
      * build the response for a found resource.
      */
     private[this] def found(resource: Resource) = {
-        var response = ok(resource)
+        var response = ok(resource, resource.contentType)
         for(time <- resource.lastModified; if(time > 0)) {
             response = response.lastModified(new Date(time))
         }
-        response = mediaType(response, resolveMediaType(resource))
         response
     }
     

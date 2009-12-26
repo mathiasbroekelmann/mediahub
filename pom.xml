@@ -221,6 +221,11 @@
                 <artifactId>commons-io</artifactId>
                 <version>1.4</version>
             </dependency>
+            <dependency>
+                <groupId>org.ops4j.peaberry.extensions</groupId>
+                <artifactId>peaberry.activation</artifactId>
+                <version>1.2-SNAPSHOT</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 

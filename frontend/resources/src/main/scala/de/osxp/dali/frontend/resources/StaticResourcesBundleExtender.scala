@@ -1,9 +1,12 @@
-package de.osxp.dali.frontend.resources.internal
+package de.osxp.dali.frontend.resources
 
-import de.osxp.dali.frontend.resources._
 import org.osgi.framework._
+
+import com.google.inject.Inject
+
 import org.springframework.osgi.io.OsgiBundleResourceLoader
 import org.springframework.core.io.{Resource => SpringResource}
+
 import org.apache.commons.io.FilenameUtils.{concat => concatPath}
 import org.apache.commons.io.output.{CountingOutputStream, NullOutputStream}
 import org.apache.commons.io.CopyUtils.copy
@@ -13,23 +16,11 @@ import scala.collection.JavaConversions._
 
 import java.io.OutputStream
 
-import javax.ws.rs.ext.MessageBodyWriter
-
-/**
- * Registers the distributed resources handler.
- * 
- * @author Mathias Broekelmann
- *
- * @since 22.12.2009
- *
- */
-class DistributedResourcesExtender extends AbstractExtender {
+class StaticResourcesBundleExtender @Inject() (contentTypes: ContentTypes) extends BundleExtender {
     
     override val deactivateOnStop = false
     
     val extenderBuilder = (context: BundleContext) => new Extender {
-        
-        val resourceWriterRegistration = context.registerService(classOf[MessageBodyWriter[Resource]].getName, new ResourceMessageWriter, null)
         
         /**
          * Actually perform the registration of distributed resources.
@@ -45,7 +36,6 @@ class DistributedResourcesExtender extends AbstractExtender {
             val properties = new java.util.Hashtable[String, String]
             properties.put("service.exported.interfaces", "*");
             properties.put("service.exported.configs", "org.apache.cxf.rs")
-            //properties.put("org.apache.cxf.ws.address", "http://localhost:9090/test")
             properties.put("org.apache.cxf.rs.httpservice.context", "/" + alias)
             val registration = context.registerService(classOf[StaticResources].getName, resources, properties)
             Some(new Activation {
@@ -60,10 +50,6 @@ class DistributedResourcesExtender extends AbstractExtender {
             })
         }
 
-        def close {
-            // resourceWriterRegistration.unregister
-        }
-        
         def loader(bundle: Bundle, base: String): ResourceLoader = {
             new ResourceLoader {
                 val loader = new OsgiBundleResourceLoader(bundle)
@@ -81,12 +67,12 @@ class DistributedResourcesExtender extends AbstractExtender {
         
         def asResource(resource: SpringResource): Resource = {
             new Resource {
-                def lastModified: Option[Long] = {
+                lazy val lastModified: Option[Long] = {
                     val lm = resource.lastModified
                     if(lm > 0) Some(lm) else None
                 }
                 
-                def size: Option[Long] = {
+                lazy val size: Option[Long] = {
                     Some(writeTo(new CountingOutputStream(new NullOutputStream)).getByteCount)
                 }
                 
@@ -100,7 +86,9 @@ class DistributedResourcesExtender extends AbstractExtender {
                     out
                 }
                 
-                def uri = resource.getURI
+                lazy val uri = resource.getURI
+                
+                lazy val contentType = contentTypes.contentType(uri.getPath)
             }
         }
         

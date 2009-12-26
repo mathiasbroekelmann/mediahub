@@ -57,6 +57,11 @@
             <artifactId>jmimemagic</artifactId>
             <version>0.1.2</version>
         </dependency>
+        <dependency>
+            <groupId>org.ops4j.peaberry.extensions</groupId>
+            <artifactId>peaberry.activation</artifactId>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
 </project>

@@ -1,17 +1,17 @@
-package de.osxp.dali.frontend.resources.internal
+package de.osxp.dali.frontend.resources
 
 import org.osgi.framework._
+
+import com.google.inject._
+
+import org.ops4j.peaberry.activation.{Start, Stop}
+
 import scala.collection.mutable.{Map, Set}
 
-/**
- * Base class for extender implementations.
- * 
- * @author Mathias Broekelmann
- *
- * @since 22.12.2009
- *
- */
-abstract class AbstractExtender extends BundleActivator {
+trait BundleExtender {
+    
+    @Inject
+    val context: BundleContext = context
     
     /**
      * factory method for instances of extender.
@@ -103,7 +103,8 @@ abstract class AbstractExtender extends BundleActivator {
     
     private[this] var extender: Option[Extender] = None
     
-    def start(context: BundleContext) {
+    @Start
+    def start {
         extender = Option(extenderBuilder(context))
         context.addBundleListener(bundleListener)
         for(bundle <- context.getBundles; if ((bundle.getState & (Bundle.STARTING | Bundle.ACTIVE)) != 0)) {
@@ -111,7 +112,8 @@ abstract class AbstractExtender extends BundleActivator {
         }
     }
 
-    def stop(context: BundleContext) {
+    @Stop
+    def stop {
         context.removeBundleListener(bundleListener)
         registry.close
         extender.foreach(_.close)
@@ -136,7 +138,7 @@ trait Extender {
      * called when the extender is shut down. Implementations must not deactivate any activations. 
      * this method is only for additional clean up of the extender.
      */
-    def close: Unit
+    def close: Unit = {}
 }
 
 

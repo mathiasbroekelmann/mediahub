@@ -2,7 +2,9 @@
 # Use this file to add customized Bnd instructions for the bundle
 #-----------------------------------------------------------------
 
-Bundle-Activator: ${bundle.namespace}.internal.DistributedResourcesExtender
+#Bundle-Activator: ${bundle.namespace}.internal.DistributedResourcesExtender
+
+Bundle-Module: de.osxp.dali.frontend.resources.internal.ResourcesOsgiModule
 
 #
 # Distributed-Resources syntax
