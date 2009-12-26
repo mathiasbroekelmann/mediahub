@@ -51,7 +51,6 @@
                         <param>--vmOptions=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005</param>
                     </provision>
                 </configuration>
-                <executions></executions>
             </plugin>
         </plugins>
     </build>
@@ -215,6 +214,11 @@
             <dependency>
                 <groupId>org.springframework.osgi</groupId>
                 <artifactId>spring-osgi-io</artifactId>
+                <version>${spring.dm.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.osgi</groupId>
+                <artifactId>spring-osgi-core</artifactId>
                 <version>${spring.dm.version}</version>
             </dependency>
             <dependency>

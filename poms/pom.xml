@@ -37,10 +37,49 @@
                 <plugin>
                     <groupId>org.apache.felix</groupId>
                     <artifactId>maven-bundle-plugin</artifactId>
-                    <version>1.4.3</version>
+                    <version>2.0.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <!-- 
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <echo>Deploying bundle to ${runner.dir}/bundles</echo>
+                                <mkdir dir="${runner.dir}/bundles" />
+                                <mkdir dir="${project.build.directory}" />
+                                <copy todir="${runner.dir}/bundles">
+                                    <fileset dir="${project.build.directory}">
+                                        <include name="${project.build.finalName}.*" />
+                                    </fileset>
+                                    <chainedmapper>
+                                        <globmapper from="*"
+                                            to="${bundle.symbolicName}_${project.version}.jar" />
+                                        <regexpmapper from="^(.*)-SNAPSHOT\.jar$$" to="\1.SNAPSHOT.jar" />
+                                    </chainedmapper>
+                                </copy>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>ant</groupId>
+                        <artifactId>ant-optional</artifactId>
+                        <version>1.5.3-1</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+             -->
+        </plugins>
     </build>
 
     <dependencyManagement>
