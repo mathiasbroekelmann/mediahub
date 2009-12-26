@@ -11,7 +11,7 @@ import de.osxp.dali.page._
 
 object Alben extends NavigationPointDefinition(Root)
 
-@Path("alben")
+@Path("/")
 class Alben {
     
     @GET
@@ -21,7 +21,7 @@ class Alben {
 	}
 	
     @GET
-	@Path("{path:.*}")
+	@Path("{path:.+}")
 	def album(@PathParam("path") path: String): Page = {
 	    // TODO: find a single album for a given path
 	    var page = Page(Navigation).is(Alben)

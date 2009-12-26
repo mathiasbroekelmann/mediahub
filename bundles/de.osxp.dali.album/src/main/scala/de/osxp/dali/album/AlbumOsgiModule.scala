@@ -27,7 +27,7 @@ class AlbumActivator extends BundleActivator {
         val props = new java.util.Hashtable[String, String]()
         props.put("service.exported.interfaces", "*")
         props.put("service.exported.configs", "org.apache.cxf.rs")
-        props.put("org.apache.cxf.rs.httpservice.context", "/")
+        props.put("org.apache.cxf.rs.httpservice.context", "/alben")
         ctx.registerService(classOf[Alben].getName, new Alben, props)
     }
     
