@@ -27,6 +27,7 @@
         <spring.version>2.5.6</spring.version>
         <spring.dm.version>1.2.1</spring.dm.version>
         <bundles.configuration.location>${basedir}/src/main/configurations</bundles.configuration.location>
+        <org.ops4j.pax.logging.DefaultServiceLog.level>ERROR</org.ops4j.pax.logging.DefaultServiceLog.level>
     </properties>
 
     <packaging>pom</packaging>
