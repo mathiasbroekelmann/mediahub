@@ -23,19 +23,19 @@ import scala.xml._
  */
 @Provider
 @Produces(Array(TEXT_HTML))
-class DesktopHtmlPageWriter extends MessageBodyWriter[Page] {
+class DesktopHtmlPageWriter extends MessageBodyWriter[Page[_]] {
 
     def isWriteable(clazz: Class[_], genericType: Type,
             annotations: Array[Annotation], mediaType: MediaType): Boolean = {
-        classOf[Page].isAssignableFrom(clazz)
+        classOf[Page[_]].isAssignableFrom(clazz)
     }
     
-    def getSize(page: Page, clazz: Class[_], genericType: Type,
+    def getSize(page: Page[_], clazz: Class[_], genericType: Type,
             annotations: Array[Annotation], mediaType: MediaType): Long = {
         -1
     }
     
-    def writeTo(page: Page, clazz: Class[_], genericType: Type,
+    def writeTo(page: Page[_], clazz: Class[_], genericType: Type,
             annotations: Array[Annotation], mediaType: MediaType,
             httpHeaders: MultivaluedMap[String, Object],
             out: OutputStream): Unit = {

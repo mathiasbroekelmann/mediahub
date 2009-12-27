@@ -12,6 +12,6 @@ import de.osxp.dali.page.{Page}
 class DesktopOsgiModule extends AbstractModule {
     def configure {
         val provider = service(classOf[DesktopHtmlPageWriter]).export
-        bind(export(classOf[MessageBodyWriter[Page]])).toProvider(provider)
+        bind(export(classOf[MessageBodyWriter[Page[_]]])).toProvider(provider)
     }
 }

@@ -6,6 +6,9 @@ import org.joda.time.DateTime
 
 import org.apache.commons.lang.builder._
 
+import de.osxp.dali.validation._
+import de.osxp.dali.persistence._
+
 /**
  * Defines a resource with common properties.
  */
@@ -56,6 +59,11 @@ trait Resource {
     def canEqual(other: Any) = other.isInstanceOf[Resource]
 }
 
+
+trait MediaSourceDefinition extends PersistedEntity {
+    var name: String = _
+}
+
 /**
  * A media source defines the contract for various sources.
  */
@@ -64,7 +72,7 @@ trait MediaSource extends Resource {
     type Parent <: MediaSource
 
     /**
-     * acutally collect all medias and nested media sources into the given media collector.
+     * Actually collect all medias and nested media sources into the given media collector.
      */
     def collect[A](collector: MediaCollector[A]): Seq[A]
     
@@ -83,6 +91,12 @@ trait MediaSource extends Resource {
     override def toString = "mediasource [" + url.toString + "]"
 
     override def canEqual(other: Any) = other.isInstanceOf[MediaSource]
+    
+    def isValid: Boolean = isValid(new ValidationCollector {
+        def report(message: ValidationMessage) {}
+    })
+    
+    def isValid(collector: ValidationCollector): Boolean
 }
 
 /**

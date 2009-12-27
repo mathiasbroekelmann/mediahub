@@ -20,7 +20,7 @@ import de.osxp.dali.page.{Page, ContentOfPage}
  *
  */
 object Navigation extends ContentOfPage[NavigationPointDefinition] {
-    override def unspecifiedAt(page: Page): Option[NavigationPointDefinition] = {
+    override def unspecifiedAt(page: Page[_]): Option[NavigationPointDefinition] = {
         Some(Root)
     }
 }

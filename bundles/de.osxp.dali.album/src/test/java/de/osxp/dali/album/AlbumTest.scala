@@ -11,7 +11,7 @@ class AlbumTest {
     @Test
     def test {
         val albums = new Alben().albums
-        val contents = albums.contents
+        val contents = albums.other
         val nav = albums(Navigation)
         assertThat(nav, is(Some(Alben).asInstanceOf[Option[NavigationPointDefinition]]))
     }
