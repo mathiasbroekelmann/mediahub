@@ -15,16 +15,17 @@ object Alben extends NavigationPointDefinition(Root)
 class Alben {
     
     @GET
-	def albums: Page = {
+	def albums: Page[Seq[Album]] = {
 	    // TODO: find all albums
-	    Page(Navigation).is(Alben).title("Alben").build
+	    Page(Seq.empty[Album])(Navigation).is(Alben).title("Alben").build
 	}
 	
     @GET
 	@Path("{path:.+}")
-	def album(@PathParam("path") path: String): Page = {
+	def album(@PathParam("path") path: String): Page[Album] = {
 	    // TODO: find a single album for a given path
-	    var page = Page(Navigation).is(Alben)
+        val album: Album = null
+	    var page = Page(album)(Navigation).is(Alben)
 	    page(PageTitle).is("foo")
 	    page.build
 	}
