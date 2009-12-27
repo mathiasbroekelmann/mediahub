@@ -114,7 +114,6 @@ trait BundleExtender {
 
     @Stop
     def stop {
-        context.removeBundleListener(bundleListener)
         registry.close
         extender.foreach(_.close)
     }
