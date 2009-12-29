@@ -408,5 +408,16 @@
             <artifactId>com.springsource.javax.persistence</artifactId>
             <version>1.0.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.servicemix.naming</groupId>
+            <artifactId>org.apache.servicemix.naming</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.xbean</groupId>
+            <artifactId>xbean-naming</artifactId>
+            <version>3.5</version>
+        </dependency>
     </dependencies>
+
 </project>
