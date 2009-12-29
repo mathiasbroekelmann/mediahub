@@ -39,7 +39,7 @@ class FilesystemMediaSourceDefinition(val name: String)
     extends MediaSourceDefinition[FilesystemMediaSource] 
     with FilesystemMediaSourceOperations {
     
-    def this() = this(null)
+    private def this() = this(null)
 
     val location: String = location
 

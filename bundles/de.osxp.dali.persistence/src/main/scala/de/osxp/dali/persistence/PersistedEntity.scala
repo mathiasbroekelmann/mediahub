@@ -6,5 +6,5 @@ import javax.persistence._
 trait PersistedEntity {
     @Id
     @GeneratedValue
-    val id: Int = id
+    val id: Integer = id
 }
