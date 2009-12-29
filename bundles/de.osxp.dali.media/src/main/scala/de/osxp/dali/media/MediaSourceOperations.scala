@@ -8,6 +8,41 @@ import Response.Status._
 
 import de.osxp.dali.page._
 
+import de.osxp.dali.persistence._
+
+/**
+ * Identifies a type of a media source.
+ */
+abstract case class MediaSourceType[A<:MediaSource] {
+    
+    /**
+     * create a new instance of media source definition for the given name.
+     */
+    def create(name: String): MediaSourceDefinition[A]
+}
+
+/**
+ * the persistent entity of a media source.
+ * 
+ * @author Mathias Broekelmann
+ *
+ * @since 29.12.2009
+ *
+ */
+trait MediaSourceDefinition[A<:MediaSource] extends PersistedEntity {
+    val name: String
+    
+    /**
+     * if that definition is able to create a valid media source it will return Some otherwise None.
+     */
+    def apply: Option[A]
+    
+    /**
+     * Convenience method to execute a given function in the context of a valid media source instance.
+     */
+    def apply[B](f: A => B): Option[B] = apply.map(f)
+}
+
 @Path("media/sources")
 trait MediaSourcesOperations {
     
@@ -17,58 +52,77 @@ trait MediaSourcesOperations {
     /**
      * Provide a list of all media sources
      */
-    def sources: Seq[MediaSource]
+    def sources: Seq[MediaSourceDefinition[_]]
     
     /**
      * start the creation of a new media source for the given type.
      */
     @POST
-    @Consumes(Array(MediaType.APPLICATION_FORM_URLENCODED))
     def create(@FormParam("name") name: String,
-               @FormParam("type") msType: String,
+               @FormParam("type") mediaSourceType: MediaSourceType[MediaSource],
                @Context uriInfo: UriInfo): Response
 
     @Path("{name}")
-    def get(@PathParam("name") name: String): Option[MediaSource]
-}
-
-trait MediaSourceDao {
-    def byName(name: String): Option[MediaSource]
-    
-    def findAll: Seq[MediaSource]
-}
-
-trait MediaSourceTypeRegistry {
-    def resolveType(msType: String): Option[MediaSourceType[MediaSource]]
+    def get(@PathParam("name") name: String): Option[MediaSourceDefinition[_]]
 }
 
 /**
- * Identifies a type of a media source.
+ * contract to access persisted media sources
+ * 
+ * @author Mathias Broekelmann
+ *
+ * @since 29.12.2009
+ *
  */
-abstract case class MediaSourceType[A<:MediaSource] {
-    def create(name: String): A
+trait MediaSourceDefinitionDao {
+
+    def persist(definition: MediaSourceDefinition[_])
+
+    def findAll: Seq[MediaSourceDefinition[_]]
+
+    def byName(name: String): Option[MediaSourceDefinition[_]]
 }
 
-
-class MediaSources @Inject() (dao: MediaSourceDao, registry: MediaSourceTypeRegistry) extends MediaSourcesOperations {
+/**
+ * 
+ * @author Mathias Broekelmann
+ *
+ * @since 29.12.2009
+ *
+ */
+trait MediaSources extends MediaSourcesOperations {
+    
+    val dao: MediaSourceDefinitionDao
+    
+    /**
+     * Create a raw uninitialized media source.
+     */
     def create(name: String,
-               msType: String,
+               mediaSourceType: MediaSourceType[MediaSource],
                uriInfo: UriInfo): Response = {
-        val response = registry.resolveType(msType)
-                               .map(_.create(name))
-                               .map { source =>
-            val uri = uriInfo.getAbsolutePathBuilder.path(classOf[MediaSourcesOperations], "get").build(name)
-            Response.created(uri)
-        }
-        response.getOrElse(Response.status(BAD_REQUEST)).build
+        val mediaSource = mediaSourceType.create(name)
+        val uri = uriInfo.getAbsolutePathBuilder.path(classOf[MediaSourcesOperations], "get").build(name)
+        Response.created(uri).build
     }
     
+    /**
+     * Provide a list of all media sources.
+     */
     def sources = dao.findAll
 
-    def get(name: String): Option[MediaSource] = dao.byName(name)
+    /**
+     * Locate a single media source instance.
+     */
+    def get(name: String) = dao.byName(name)
 }
 
-trait MediaSourceOperations {
+/**
+ * mixin trait for operations on media sources.
+ */
+trait MediaSourceOperations[A<:MediaSource] extends MediaSourceDefinition[A] {
+    /**
+     * get the page containing this media source as the main content
+     */
     @GET
-    def get = Page(this).build
+    def get = Page(this.asInstanceOf[MediaSourceDefinition[A]]).build
 }

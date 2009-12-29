@@ -60,10 +60,6 @@ trait Resource {
 }
 
 
-trait MediaSourceDefinition extends PersistedEntity {
-    var name: String = _
-}
-
 /**
  * A media source defines the contract for various sources.
  */

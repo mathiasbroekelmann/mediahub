@@ -3,5 +3,3 @@
 #-----------------------------------------------------------------
 
 #Bundle-Activator: ${bundle.namespace}.internal.ExampleActivator
-
- JPA-PersistenceUnits:dali

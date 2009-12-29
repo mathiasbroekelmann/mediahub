@@ -2,9 +2,9 @@ package de.osxp.dali.persistence
 
 import javax.persistence._
 
-@Entity
+@MappedSuperclass
 trait PersistedEntity {
     @Id
     @GeneratedValue
-    var id: Int = _
+    val id: Int = id
 }

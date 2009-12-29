@@ -4,4 +4,6 @@
 
 #Bundle-Activator: ${bundle.namespace}.internal.ExampleActivator
 
- JPA-PersistenceUnits:dali
+Bundle-Module: ${bundle.namespace}.OsgiModule
+
+JPA-PersistenceUnits:dali

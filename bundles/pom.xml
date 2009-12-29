@@ -25,6 +25,9 @@
     <module>de.osxp.dali.album</module>
     <module>de.osxp.dali.page</module>
     <module>de.osxp.dali.media</module>
+    <module>de.osxp.dali.persistence</module>
+    <module>de.osxp.dali.validation</module>
+<!--    <module>org.dynamicjava.jpa</module>-->
   </modules>
 
 </project>

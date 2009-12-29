@@ -12,6 +12,41 @@ import de.osxp.dali.page._
 import de.osxp.dali.validation._
 import de.osxp.dali.validation.Validate._
 
+import javax.persistence._
+
+/**
+ * The file system media source type.
+ * 
+ * @author Mathias Broekelmann
+ *
+ * @since 29.12.2009
+ *
+ */
+object FilesystemMediaSourceType extends MediaSourceType[FilesystemMediaSource] {
+    def create(name: String): FilesystemMediaSourceDefinition = new FilesystemMediaSourceDefinition(name)
+}
+
+/**
+ * Persistent entity of the file system media source.
+ * 
+ * @author Mathias Broekelmann
+ *
+ * @since 29.12.2009
+ *
+ */
+@Entity(name = "FilesystemMediaSource")
+class FilesystemMediaSourceDefinition(val name: String) 
+    extends MediaSourceDefinition[FilesystemMediaSource] 
+    with FilesystemMediaSourceOperations {
+    
+    def this() = this(null)
+
+    val location: String = location
+
+    def apply: Option[FilesystemMediaSource] = 
+        Option(location).map(path => new FilesystemMediaSource(new File(path)))
+}
+
 /**
  * directory extractor.
  */
@@ -26,23 +61,11 @@ object IsFile {
     def unapply(file: File): Option[File] = if(file.isFile) Some(file) else None
 }
 
-/**
- * a persisted file system media source.
- * 
- * @author Mathias Broekelmann
- *
- * @since 27.12.2009
- *
- */
-class FilesystemMediaSourceDefinition extends MediaSourceDefinition {
-    var location: String = _
-}
-
-trait FilesystemMediaSourceOperations extends MediaSourceOperations {
+trait FilesystemMediaSourceOperations extends MediaSourceOperations[FilesystemMediaSource] {
     @POST
     @Consumes(Array(MediaType.APPLICATION_FORM_URLENCODED))
     def update(@FormParam("name") name: String, 
-               @FormParam("location") location: File, 
+               @FormParam("location") location: File,
                @Context uriInfo: UriInfo): Response = {
         //TODO: update name and location in the file system media source
         val uri = uriInfo.getAbsolutePath
@@ -65,8 +88,7 @@ class FilesystemMediaSource(val name: String,
                             val location: File, 
                             val filter: Option[File => Boolean], 
                             val parent: Option[FilesystemMediaSource]) 
-                            extends MediaSource 
-                            with FilesystemMediaSourceOperations {
+                            extends MediaSource {
     
     type Parent = FilesystemMediaSource
 
@@ -87,7 +109,7 @@ class FilesystemMediaSource(val name: String,
         def accept(file: File) = file.canRead && 
                                  filter.map(_(file)).getOrElse(true)
     }
-
+    
     /**
      * Collects all media files recursively and notifies the collector.
      * Each directory that passes the defined filter is notified as a media source to the collector.

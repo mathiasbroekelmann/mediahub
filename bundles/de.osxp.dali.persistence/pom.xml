@@ -10,13 +10,13 @@
     </parent>
 
     <properties>
-        <bundle.symbolicName>de.osxp.dali.media</bundle.symbolicName>
-        <bundle.namespace>de.osxp.dali.media</bundle.namespace>
+        <bundle.symbolicName>de.osxp.dali.persistence</bundle.symbolicName>
+        <bundle.namespace>de.osxp.dali.persistence</bundle.namespace>
     </properties>
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>de.osxp.dali.bundles</groupId>
-    <artifactId>de.osxp.dali.media</artifactId>
+    <artifactId>de.osxp.dali.persistence</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <name>${bundle.symbolicName}</name>
@@ -25,28 +25,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>jsr311-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>joda-time</groupId>
-            <artifactId>joda-time</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.osxp.dali.bundles</groupId>
-            <artifactId>de.osxp.dali.navigation</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.osxp.dali.bundles</groupId>
-            <artifactId>de.osxp.dali.page</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.osxp.dali.bundles</groupId>
-            <artifactId>de.osxp.dali.persistence</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>de.osxp.dali.bundles</groupId>
-            <artifactId>de.osxp.dali.validation</artifactId>
+            <groupId>javax.persistence</groupId>
+            <artifactId>persistence-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
@@ -62,18 +42,29 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>javax.persistence</groupId>
-            <artifactId>persistence-api</artifactId>
+            <groupId>commons-dbcp</groupId>
+            <artifactId>commons-dbcp</artifactId>
+            <version>1.2.1</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>xml-apis</groupId>
+                    <artifactId>xml-apis</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>xerces</groupId>
+                    <artifactId>xerces</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>hsqldb</groupId>
+            <artifactId>hsqldb</artifactId>
+            <version>1.8.0.10</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
