@@ -1,0 +1,8 @@
+#-----------------------------------------------------------------
+# Use this file to add customized Bnd instructions for the bundle
+#-----------------------------------------------------------------
+
+Bundle-Module: ${bundle.namespace}.internal.OsgiWebModule
+
+Export-Package: ${bundle.namespace}.*,\
+    com.google.inject.servlet.*

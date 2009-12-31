@@ -27,7 +27,8 @@
     <module>de.osxp.dali.media</module>
     <module>de.osxp.dali.persistence</module>
     <module>de.osxp.dali.validation</module>
-<!--    <module>org.dynamicjava.jpa</module>-->
+    <!--    <module>org.dynamicjava.jpa</module>-->
+    <module>de.osxp.dali.web</module>
   </modules>
 
 </project>
