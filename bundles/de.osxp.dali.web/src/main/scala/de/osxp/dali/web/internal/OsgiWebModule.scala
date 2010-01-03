@@ -1,6 +1,6 @@
 package de.osxp.dali.web.internal
 
-import com.google.inject.{AbstractModule, Provider, Provides, Key, Scope}
+import com.google.inject.{AbstractModule, Provider, Provides, Key, Scope, Inject}
 import com.google.inject.name._
 import org.ops4j.peaberry.util.TypeLiterals.export
 import org.ops4j.peaberry.util.Attributes.names
@@ -12,6 +12,8 @@ import javax.servlet.http._
 import scala.collection.JavaConversions._
 import scala.collection._
 
+import org.osgi.framework.BundleContext
+
 /**
  * 
  * @author Mathias Broekelmann
@@ -20,6 +22,12 @@ import scala.collection._
  *
  */
 class OsgiWebModule extends AbstractModule {
+    
+    @Inject
+    def onContext(context: BundleContext) {
+        OsgiWebModule.bundlecontext = Some(context)
+    }
+
     def configure {
         // export the servlet filter service to match any request.
         bind(export(classOf[Filter]))
@@ -39,6 +47,10 @@ class OsgiWebModule extends AbstractModule {
                         .attributes(mutable.Map("scope" -> "session"))
                         .export)
     }
+}
+
+object OsgiWebModule {
+    var bundlecontext: Option[BundleContext] = bundlecontext
 }
 
 /**

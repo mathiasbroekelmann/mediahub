@@ -9,27 +9,33 @@ import scala.collection.immutable.Map
 import de.osxp.dali.navigation._
 import de.osxp.dali.page._
 
-object Alben extends NavigationPointDefinition(Root)
-
-@Path("/")
-class Alben {
-    
+@Path("")
+trait AlbenOperations {
     @GET
+    def albums: Page[Seq[Album]]
+
+    @GET
+    @Path("{path:.+}")
+    def album(@PathParam("path") path: String): Page[Album]
+}
+
+class Alben extends AlbenOperations {
+    
 	def albums: Page[Seq[Album]] = {
 	    // TODO: find all albums
-	    Page(Seq.empty[Album])(Navigation).is(Alben).title("Alben").build
+	    Page(Seq.empty[Album])(Navigation).is(Album).title("Alben").build
 	}
 	
-    @GET
-	@Path("{path:.+}")
-	def album(@PathParam("path") path: String): Page[Album] = {
+	def album(path: String): Page[Album] = {
 	    // TODO: find a single album for a given path
         val album: Album = null
-	    var page = Page(album)(Navigation).is(Alben)
+	    var page = Page(album)(Navigation).is(Album)
 	    page(PageTitle).is("foo")
 	    page.build
 	}
 }
+
+object Album extends NavigationPointDefinition(Root)
 
 trait Album extends Container[Element]  {
     override type ParentType<:Album

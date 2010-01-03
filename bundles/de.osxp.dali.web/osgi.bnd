@@ -4,5 +4,5 @@
 
 Bundle-Module: ${bundle.namespace}.internal.OsgiWebModule
 
-Export-Package: ${bundle.namespace}.*,\
-    com.google.inject.servlet.*
+#Export-Package: ${bundle.namespace}.*,\
+#    com.google.inject.servlet.*

@@ -29,6 +29,7 @@
     <module>de.osxp.dali.validation</module>
     <!--    <module>org.dynamicjava.jpa</module>-->
     <module>de.osxp.dali.web</module>
+    <module>de.osxp.dali.resteasy</module>
   </modules>
 
 </project>
