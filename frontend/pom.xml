@@ -3,7 +3,7 @@
 
   <parent>
     <groupId>org.mediahub</groupId>
-    <artifactId>dali</artifactId>
+    <artifactId>mediahub</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
 

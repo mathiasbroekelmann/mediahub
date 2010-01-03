@@ -11,7 +11,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>compiled-bundle-settings</artifactId>
 
-    <name>dali - bundle instructions</name>
+    <name>mediahub - bundle instructions</name>
 
     <packaging>pom</packaging>
 

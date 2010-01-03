@@ -11,7 +11,7 @@
   <modelVersion>4.0.0</modelVersion>
   <artifactId>wrapper-bundle-settings</artifactId>
 
-  <name>dali - wrapper instructions</name>
+  <name>mediahub - wrapper instructions</name>
 
   <!--
    | don't apply project details to wrapped jars
