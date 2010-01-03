@@ -1,4 +1,4 @@
-package de.osxp.dali.frontend.resources
+package org.mediahub.frontend.resources
 
 import javax.ws.rs.ext.{Provider, MessageBodyWriter}
 import javax.ws.rs.core.{MediaType, MultivaluedMap}

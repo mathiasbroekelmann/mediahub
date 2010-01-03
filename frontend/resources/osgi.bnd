@@ -4,7 +4,7 @@
 
 #Bundle-Activator: ${bundle.namespace}.internal.DistributedResourcesExtender
 
-Bundle-Module: de.osxp.dali.frontend.resources.internal.ResourcesOsgiModule
+Bundle-Module: org.mediahub.frontend.resources.internal.ResourcesOsgiModule
 
 #
 # Distributed-Resources syntax

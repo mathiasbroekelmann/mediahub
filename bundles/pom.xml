@@ -2,13 +2,13 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
   <parent>
-    <groupId>de.osxp.dali</groupId>
+    <groupId>org.mediahub</groupId>
     <artifactId>dali</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>de.osxp.dali.bundles</groupId>
+  <groupId>org.mediahub.bundles</groupId>
   <artifactId>bundles</artifactId>
 
   <name>bundles</name>
@@ -17,19 +17,19 @@
 
   <modules>
     <module>org.scala-lang.scala-library</module>
-    <module>de.osxp.dali.navigation</module>
-    <module>de.osxp.dali.message</module>
-    <module>de.osxp.dali.time</module>
+    <module>org.mediahub.navigation</module>
+    <module>org.mediahub.message</module>
+    <module>org.mediahub.time</module>
     <module>jmimemagic</module>
-    <module>de.osxp.dali.jackson</module>
-    <module>de.osxp.dali.album</module>
-    <module>de.osxp.dali.page</module>
-    <module>de.osxp.dali.media</module>
-    <module>de.osxp.dali.persistence</module>
-    <module>de.osxp.dali.validation</module>
+    <module>org.mediahub.jackson</module>
+    <module>org.mediahub.album</module>
+    <module>org.mediahub.page</module>
+    <module>org.mediahub.media</module>
+    <module>org.mediahub.persistence</module>
+    <module>org.mediahub.validation</module>
     <!--    <module>org.dynamicjava.jpa</module>-->
-    <module>de.osxp.dali.web</module>
-    <module>de.osxp.dali.resteasy</module>
+    <module>org.mediahub.web</module>
+    <module>org.mediahub.resteasy</module>
   </modules>
 
 </project>

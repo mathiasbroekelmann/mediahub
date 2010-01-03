@@ -3,11 +3,11 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>de.osxp.dali</groupId>
+    <groupId>org.mediahub</groupId>
     <artifactId>dali</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <name>de.osxp.dali (OSGi project)</name>
+    <name>org.mediahub (OSGi project)</name>
 
     <!--
    | describe your project here
@@ -162,23 +162,23 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>de.osxp.dali.bundles</groupId>
-                <artifactId>de.osxp.dali.page</artifactId>
+                <groupId>org.mediahub.bundles</groupId>
+                <artifactId>org.mediahub.page</artifactId>
                 <version>1.0-SNAPSHOT</version>
             </dependency>
             <dependency>
-                <groupId>de.osxp.dali.bundles</groupId>
-                <artifactId>de.osxp.dali.navigation</artifactId>
+                <groupId>org.mediahub.bundles</groupId>
+                <artifactId>org.mediahub.navigation</artifactId>
                 <version>1.0-SNAPSHOT</version>
             </dependency>
             <dependency>
-                <groupId>de.osxp.dali.bundles</groupId>
-                <artifactId>de.osxp.dali.persistence</artifactId>
+                <groupId>org.mediahub.bundles</groupId>
+                <artifactId>org.mediahub.persistence</artifactId>
                 <version>1.0-SNAPSHOT</version>
             </dependency>
             <dependency>
-                <groupId>de.osxp.dali.bundles</groupId>
-                <artifactId>de.osxp.dali.validation</artifactId>
+                <groupId>org.mediahub.bundles</groupId>
+                <artifactId>org.mediahub.validation</artifactId>
                 <version>1.0-SNAPSHOT</version>
             </dependency>
             <dependency>

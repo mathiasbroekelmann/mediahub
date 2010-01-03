@@ -1,4 +1,4 @@
-package de.osxp.dali.frontend.resources
+package org.mediahub.frontend.resources
 
 import java.io.File
 

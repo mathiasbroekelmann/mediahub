@@ -1,10 +1,10 @@
-package de.osxp.dali.frontend.resources.internal
+package org.mediahub.frontend.resources.internal
 
 import org.osgi.framework._
 
 import scala.collection.mutable.{Map, Set}
 
-import de.osxp.dali.frontend.resources._
+import org.mediahub.frontend.resources._
 
 import com.google.inject._
 import com.google.inject.name._

@@ -1,4 +1,4 @@
-package de.osxp.dali.frontend.html.desktop
+package org.mediahub.frontend.html.desktop
 
 import javax.ws.rs._
 import ext.{Provider, MessageBodyWriter}
@@ -9,7 +9,7 @@ import java.io.{OutputStream, IOException, OutputStreamWriter}
 import java.lang.annotation.Annotation
 import java.lang.reflect.Type
 
-import de.osxp.dali.page.{Page, ContentOfPage}
+import org.mediahub.page.{Page, ContentOfPage}
 
 import scala.xml._
 

@@ -4,18 +4,18 @@
 
     <parent>
         <relativePath>../../poms/compiled/</relativePath>
-        <groupId>de.osxp.dali.build</groupId>
+        <groupId>org.mediahub.build</groupId>
         <artifactId>compiled-bundle-settings</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
     <properties>
-        <bundle.symbolicName>de.osxp.dali.frontend.resources</bundle.symbolicName>
-        <bundle.namespace>de.osxp.dali.frontend.resources</bundle.namespace>
+        <bundle.symbolicName>org.mediahub.frontend.resources</bundle.symbolicName>
+        <bundle.namespace>org.mediahub.frontend.resources</bundle.namespace>
     </properties>
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>de.osxp.dali.frontend</groupId>
+    <groupId>org.mediahub.frontend</groupId>
     <artifactId>resources</artifactId>
     <version>1.0-SNAPSHOT</version>
 

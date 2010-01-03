@@ -3,7 +3,7 @@
 
   <parent>
     <relativePath>../poms/wrappers/</relativePath>
-    <groupId>de.osxp.dali.build</groupId>
+    <groupId>org.mediahub.build</groupId>
     <artifactId>wrapper-bundle-settings</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
@@ -16,7 +16,7 @@
   </properties>
 
   <modelVersion>4.0.0</modelVersion>
-  <groupId>de.osxp.dali.bundles</groupId>
+  <groupId>org.mediahub.bundles</groupId>
   <artifactId>jmimemagic</artifactId>
   <version>0.1.2-001-SNAPSHOT</version>
 

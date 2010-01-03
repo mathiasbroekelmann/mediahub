@@ -1,4 +1,4 @@
-package de.osxp.dali.frontend.resources
+package org.mediahub.frontend.resources
 
 import javax.ws.rs.{Path, GET, PathParam}
 import javax.ws.rs.core.{Response, MediaType}

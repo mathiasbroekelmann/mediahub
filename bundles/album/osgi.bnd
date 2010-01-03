@@ -1,0 +1,7 @@
+#-----------------------------------------------------------------
+# Use this file to add customized Bnd instructions for the bundle
+#-----------------------------------------------------------------
+
+#Bundle-Activator: org.mediahub.album.AlbumActivator
+
+Bundle-Module: org.mediahub.album.AlbumOsgiModule

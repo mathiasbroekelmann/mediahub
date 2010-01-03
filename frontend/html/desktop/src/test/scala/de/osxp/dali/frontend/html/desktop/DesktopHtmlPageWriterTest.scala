@@ -1,4 +1,4 @@
-package de.osxp.dali.frontend.html.desktop
+package org.mediahub.frontend.html.desktop
 
 import java.io.{OutputStream, IOException, OutputStreamWriter}
 
