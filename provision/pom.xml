@@ -118,6 +118,11 @@
             <version>${spring.dm.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.springframework.osgi</groupId>
+            <artifactId>spring-osgi-web</artifactId>
+            <version>${spring.dm.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.aopalliance</groupId>
             <artifactId>com.springsource.org.aopalliance</artifactId>
             <version>1.0.0</version>
@@ -142,24 +147,24 @@
             <artifactId>spring-core</artifactId>
             <version>${spring.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.cxf.dosgi</groupId>
-            <artifactId>cxf-dosgi-ri-discovery-local</artifactId>
-            <version>1.1</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.cxf.dosgi</groupId>
-            <artifactId>cxf-dosgi-ri-dsw-cxf</artifactId>
-            <version>1.1</version>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.cxf</groupId>
-            <artifactId>cxf-bundle-minimal</artifactId>
-            <version>${cxf.version}</version>
-            <scope>runtime</scope>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.cxf.dosgi</groupId>-->
+<!--            <artifactId>cxf-dosgi-ri-discovery-local</artifactId>-->
+<!--            <version>1.1</version>-->
+<!--            <scope>runtime</scope>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.cxf.dosgi</groupId>-->
+<!--            <artifactId>cxf-dosgi-ri-dsw-cxf</artifactId>-->
+<!--            <version>1.1</version>-->
+<!--            <scope>runtime</scope>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.cxf</groupId>-->
+<!--            <artifactId>cxf-bundle-minimal</artifactId>-->
+<!--            <version>${cxf.version}</version>-->
+<!--            <scope>runtime</scope>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.apache.geronimo.specs</groupId>
             <artifactId>geronimo-stax-api_1.0_spec</artifactId>

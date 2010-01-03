@@ -5,7 +5,7 @@
 
 
     <listener>
-        <listener-class>de.osxp.dali.web.internal.OsgiBundleContextListener</listener-class>
+        <listener-class>org.mediahub.web.internal.OsgiBundleContextListener</listener-class>
     </listener>
 
     <filter>
