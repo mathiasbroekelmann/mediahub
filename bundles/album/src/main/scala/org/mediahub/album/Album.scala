@@ -9,7 +9,7 @@ import scala.collection.immutable.Map
 import org.mediahub.navigation._
 import org.mediahub.page._
 
-@Path("")
+@Path("alben")
 trait AlbenOperations {
     @GET
     def albums: Page[Seq[Album]]

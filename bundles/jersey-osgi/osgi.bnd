@@ -6,6 +6,8 @@ Bundle-Activator: ${bundle.namespace}.internal.Activator
 
 Embed-Dependency: *;groupId=com.sun.jersey;scope=compile|runtime;type=!pom;inline=false
 
+Private-Package: com.sun.jersey.server.impl*;-split-package:=merge-first
+
 Import-Package: \
  !com.sun*,\
  !org.apache.tools.ant*,\

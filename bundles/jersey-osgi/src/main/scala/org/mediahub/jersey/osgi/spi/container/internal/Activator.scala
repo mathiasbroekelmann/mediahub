@@ -2,13 +2,17 @@ package org.mediahub.jersey.osgi.spi.container.internal
 
 import org.mediahub.jersey.osgi.spi.container.servlet.OsgiContainer
 
+import org.mediahub.jersey.osgi.spi.container.guice.JerseyModule
+
 import org.osgi.framework.{BundleActivator, BundleContext}
 
-import com.google.inject.{Guice, Inject, AbstractModule, Module, Injector}
+import com.google.inject.{Guice, Inject, AbstractModule, Module, Injector, Scopes, Key, Provides, TypeLiteral}
+import com.google.inject.name.{Named, Names}
 
 import org.ops4j.peaberry.Peaberry._
 import org.ops4j.peaberry.Import
 import org.ops4j.peaberry.util.AbstractWatcher
+import org.ops4j.peaberry.ServiceWatcher
 import org.ops4j.peaberry.util.TypeLiterals._
 
 import org.osgi.service.http.HttpService
@@ -31,35 +35,5 @@ class Activator extends BundleActivator {
     
     def stop(context: BundleContext) {
         module foreach (_.stop)
-    }
-}
-
-class JerseyModule(context: BundleContext) extends AbstractModule {
-    
-    def stop {
-        cleanups foreach (_())
-    }
-    
-    type Cleanup = ()=>Unit
-    
-    private[this] val cleanups = scala.collection.mutable.Seq[Cleanup]()
-    
-    def configure {
-        def httpService = service(classOf[HttpService]).out(httpServiceWatcher).multiple
-        bind(iterable(classOf[HttpService])).toProvider(httpService).asEagerSingleton()
-    }
-    
-    def httpServiceWatcher = new AbstractWatcher[HttpService] {
-        override def adding(service: Import[HttpService]): HttpService = {
-            val httpService = service.get
-            httpService.registerServlet("/", new OsgiContainer(context), null, null)
-            cleanups :+ {
-                if(service.available) {
-                    httpService.unregister("/")
-                    service.unget
-                }
-            }
-            null
-        }
     }
 }

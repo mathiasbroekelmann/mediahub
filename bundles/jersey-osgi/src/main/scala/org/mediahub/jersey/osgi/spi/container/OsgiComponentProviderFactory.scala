@@ -11,6 +11,13 @@ import com.sun.jersey.core.spi.component.ComponentScope
 
 import org.osgi.framework.{BundleContext, ServiceListener, ServiceEvent, ServiceReference}
 
+import org.ops4j.pax.swissbox.core.BundleClassLoader.newPriviledged
+import org.ops4j.pax.swissbox.core.ContextClassLoaderUtils.doWithClassLoader
+
+import java.util.concurrent.Callable
+
+import scala.collection.JavaConversions._
+
 /**
  * Tracks for osgi services and register provider and root resources in the provided resource config instance.
  * 
@@ -21,17 +28,24 @@ import org.osgi.framework.{BundleContext, ServiceListener, ServiceEvent, Service
  */
 class OsgiComponentProviderFactory (val config: ResourceConfig, val bundleContext: BundleContext) extends IoCComponentProviderFactory {
 
-    private[this] val containerListener = scala.collection.mutable.Seq[ContainerListener]()
-    private[this] val usedServices = scala.collection.mutable.Seq[ServiceReference]()
+    private[this] var containerListener = Seq[ContainerListener]()
+    private[this] var usedServices = Seq[ServiceReference]()
 
     def containerNotifier = new ContainerNotifier {
         def addListener(listener: ContainerListener) {
-            containerListener :+ listener
+            synchronized {
+                containerListener :+= listener
+            }
         }
     }
 
     def reload {
-        containerListener foreach (_.onReload)
+        val classLoader = newPriviledged(bundleContext.getBundle, Thread.currentThread.getContextClassLoader)
+        doWithClassLoader(classLoader, new Callable[Unit] {
+            def call {
+                containerListener foreach (_.onReload)
+            }
+        })
     }
 
     def isUsableService(service: AnyRef): Boolean = {
@@ -43,7 +57,6 @@ class OsgiComponentProviderFactory (val config: ResourceConfig, val bundleContex
         def serviceChanged(event: ServiceEvent) {
             val ref = event.getServiceReference
             if(event.getType == ServiceEvent.UNREGISTERING && usedServices.contains(ref)) {
-                bundleContext.ungetService(ref)
                 reload
             } else {
                 val service = bundleContext.getService(ref)
@@ -60,13 +73,13 @@ class OsgiComponentProviderFactory (val config: ResourceConfig, val bundleContex
         def register: Unit
     }
 
-    class ApplicationRegistration(val app: Application) extends ServiceRegistration {
+    class ApplicationRegistration(ref: ServiceReference, app: Application) extends ServiceRegistration {
         def register {
             config.add(app)
         }
     }
 
-    class SingletonRegistration(val singleton: AnyRef) extends ServiceRegistration {
+    class SingletonRegistration(ref: ServiceReference, singleton: AnyRef) extends ServiceRegistration {
         def register {
             config.getSingletons.add(singleton)
         }
@@ -74,8 +87,8 @@ class OsgiComponentProviderFactory (val config: ResourceConfig, val bundleContex
 
     def usableServiceRegistration(ref: ServiceReference): Option[ServiceRegistration] = {
         bundleContext.getService(ref) match {
-            case app: Application => Some(new ApplicationRegistration(app))
-            case Singleton(provider) => Some(new SingletonRegistration(provider))
+            case app: Application => Some(new ApplicationRegistration(ref, app))
+            case Singleton(provider) => Some(new SingletonRegistration(ref, provider))
             case other => {
                 bundleContext.ungetService(ref)
                 None
@@ -83,10 +96,10 @@ class OsgiComponentProviderFactory (val config: ResourceConfig, val bundleContex
         }
     }
 
-    def registerServices {
+    private[this] def registerServices {
         for(ref <- bundleContext.getServiceReferences(null, null);
             serviceReg <- usableServiceRegistration(ref)) {
-            usedServices :+ ref
+            usedServices :+= ref
             serviceReg.register
         }
     }
@@ -105,7 +118,6 @@ class OsgiComponentProviderFactory (val config: ResourceConfig, val bundleContex
                  .orNull
     }
 }
-
 /**
  * extractor for singleton instances which are provider or root resources.
  */
