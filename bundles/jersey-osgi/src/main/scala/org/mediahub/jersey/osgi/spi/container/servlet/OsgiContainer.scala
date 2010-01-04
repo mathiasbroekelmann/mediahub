@@ -8,8 +8,6 @@ import com.sun.jersey.spi.container.servlet.WebConfig;
 
 import org.mediahub.jersey.osgi.spi.container.OsgiComponentProviderFactory
 
-import com.google.inject.{Singleton, Inject}
-
 import org.osgi.service.http.HttpService
 
 import javax.ws.rs.core.{Application, MediaType, Context, UriInfo, UriBuilder}
@@ -37,7 +35,7 @@ import scala.xml._
  *
  * @author Mathias Broekelmann
  */
-class OsgiContainer @Inject() (bundleContext: BundleContext) extends ServletContainer {
+class OsgiContainer (bundleContext: BundleContext) extends ServletContainer {
 
     override protected def getDefaultResourceConfig(props: java.util.Map[String, AnyRef],
                                                     webConfig: WebConfig): ResourceConfig = {
