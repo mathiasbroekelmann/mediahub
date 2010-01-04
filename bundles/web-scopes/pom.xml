@@ -10,51 +10,20 @@
     </parent>
 
     <properties>
-        <bundle.symbolicName>org.mediahub.web</bundle.symbolicName>
-        <bundle.namespace>org.mediahub.web</bundle.namespace>
+        <bundle.symbolicName>org.mediahub.bundles.web-scopes</bundle.symbolicName>
+        <bundle.namespace>org.mediahub.web.scopes</bundle.namespace>
     </properties>
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.mediahub.bundles</groupId>
-    <artifactId>org.mediahub.web</artifactId>
+    <artifactId>web-scopes</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <name>${bundle.symbolicName}</name>
+    <name>${bundle.symbolicName} [${bundle.namespace}]</name>
 
     <packaging>bundle</packaging>
 
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-war-plugin</artifactId>
-                <configuration>
-                    <packagingExcludes>WEB-INF/lib/*.jar</packagingExcludes>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
     <dependencies>
-        <dependency>
-            <groupId>com.sun.jersey</groupId>
-            <artifactId>jersey-server</artifactId>
-            <version>1.1.4.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sun.jersey.contribs</groupId>
-            <artifactId>jersey-guice</artifactId>
-            <version>1.1.4.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.guiceyfruit</groupId>
-                    <artifactId>guice-all</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.guiceyfruit</groupId>
-                    <artifactId>guice-servlet</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
@@ -63,6 +32,7 @@
             <groupId>com.google.inject.extensions</groupId>
             <artifactId>guice-servlet</artifactId>
             <version>2.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.ops4j</groupId>

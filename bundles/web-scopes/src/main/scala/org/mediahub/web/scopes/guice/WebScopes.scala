@@ -1,4 +1,4 @@
-package org.mediahub.web
+package org.mediahub.web.scopes.guice
 
 import com.google.inject.{AbstractModule, Module, Provider, Binder, Key, Scope, Inject}
 import com.google.inject.name._
@@ -12,17 +12,17 @@ import scala.collection.JavaConversions._
 import scala.collection._
 
 /**
- * Mixin trait to scope beans to request or session.
+ * guice module to support scoped beans to request or session.
  * Example for usage:
  * <pre>
  * import com.google.inject.servlet.RequestScoped
  * import com.google.inject.servlet.SessionScoped
  * 
- * Guice.createInjector(new WebModule(), new MyModule(), ...)
- * // or install WebModule
+ * Guice.createInjector(new WebScopes(), new MyModule(), ...)
+ * // or install WebScopes
  * class MyModule extends AbstractModule {
  *  ...
- *  install(new WebModule())
+ *  install(new WebScopes())
  *  // bind a bean in request scope
  *  bind(SomeRequestScopedBean.class).in(RequestScoped.class)
  *  
@@ -30,14 +30,14 @@ import scala.collection._
  *  bind(SomeSessionScopedBean.class).in(SessionScoped.class)
  *  
  *  // to use the scope instance:
- *  WebModule webModule = new WebModule();
- *  install(webModule)
- *  bind(SomeRequestScopedBean.class).in(webModule.request())
- *  bind(SomeSessionScopedBean.class).in(webModule.session())
+ *  WebScopes scopes = new WebScopes();
+ *  install(scopes)
+ *  bind(SomeRequestScopedBean.class).in(scopes.request())
+ *  bind(SomeSessionScopedBean.class).in(scopes.session())
  * }
  * </pre>
  */
-class WebModule extends AbstractModule {
+class WebScopes extends AbstractModule {
     
     def configure {
     
@@ -87,7 +87,7 @@ class WebModule extends AbstractModule {
      * return true if other is a WebModule instance since only one instance of WebModule should be installed in the binder.
      */
     override def equals(other: Any) = other match {
-        case that: WebModule => true
+        case that: WebScopes => true
         case _ => false
     }
 

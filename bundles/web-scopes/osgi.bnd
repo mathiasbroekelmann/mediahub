@@ -1,0 +1,21 @@
+#-----------------------------------------------------------------
+# Use this file to add customized Bnd instructions for the bundle
+#-----------------------------------------------------------------
+
+#Bundle-Activator: ${bundle.namespace}.internal.ExampleActivator
+
+Bundle-Module: ${bundle.namespace}.internal.OsgiWebModule
+
+Embed-Dependency: *;artifactId=guice-servlet;scope=provided;type=!pom;inline=false
+
+Export-Package: \
+ !${bundle.namespace}.internal*,\
+ com.google.inject.servlet*,\
+ ${bundle.namespace}*
+
+Private-Package: ${bundle.namespace}.internal*
+
+Import-Package: \
+ !com.google.inject.internal*,\
+ *
+
