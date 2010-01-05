@@ -6,3 +6,23 @@
 
 #Export-Package: ${bundle.namespace}.*,\
 #    com.google.inject.servlet.*
+
+Private-Package: ${bundle.namespace}.internal*
+
+Webapp-Context: mediahub
+
+Bundle-ClassPath: .,WEB-INF/classes
+
+DynamicImport-Package: *
+
+Import-Package: \
+ javax.servlet,\
+ javax.servlet.http,\
+ javax.servlet.resources,\
+ org.springframework.osgi.web.context.support,\
+ org.springframework.web.context,\
+ org.springframework.web.servlet,\
+ org.springframework.web.servlet.mvc,\
+ org.springframework.web.servlet.handler,\
+ org.mediahub.jersey.osgi.spi.container.servlet,\
+ *

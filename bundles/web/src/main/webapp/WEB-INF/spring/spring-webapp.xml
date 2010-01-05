@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:osgi="http://www.springframework.org/schema/osgi"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans   
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/osgi  
+       http://www.springframework.org/schema/osgi/spring-osgi.xsd">
+
+    <bean name="jerseyServletController" class="org.springframework.web.servlet.mvc.ServletWrappingController">
+        <property name="servletClass" value="org.mediahub.jersey.osgi.spi.container.servlet.OsgiContainer" />
+<!--        <property name="servletClass" value="com.sun.jersey.spi.container.servlet.ServletContainer" />-->
+        <property name="initParameters">
+            <value>
+                org.mediahub.jersey.osgi.spi.container.BundleContextProvider=org.mediahub.web.internal.SpringWebAppBundleContextProvider
+                com.sun.jersey.config.property.classpath=/
+            </value>
+        </property>
+    </bean>
+    
+    <bean class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+        <property name="mappings">
+            <value>
+                /**=jerseyServletController
+            </value>
+        </property>
+    </bean>
+</beans>

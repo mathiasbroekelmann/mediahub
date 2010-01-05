@@ -6,18 +6,25 @@ import com.sun.jersey.api.core.ResourceConfig;
 import com.sun.jersey.spi.container.WebApplication;
 import com.sun.jersey.spi.container.servlet.WebConfig;
 
-import org.mediahub.jersey.osgi.spi.container.OsgiComponentProviderFactory
+import org.mediahub.jersey.osgi.spi.container._
 
 import org.osgi.service.http.HttpService
 
 import javax.ws.rs.core.{Application, MediaType, Context, UriInfo, UriBuilder}
 import javax.ws.rs.{Path, GET, Produces}
 
+import java.net.URL
+import java.util.concurrent.Callable
+
 import org.osgi.framework.BundleContext
 
 import scala.collection.JavaConversions._
 
 import scala.xml._
+
+import org.ops4j.pax.swissbox.core.ContextClassLoaderUtils.doWithClassLoader
+
+import org.apache.commons.collections.IteratorUtils
 
 /**
  * A {@link Servlet} or {@link Filter} for deploying root resource classes
@@ -35,14 +42,37 @@ import scala.xml._
  *
  * @author Mathias Broekelmann
  */
-class OsgiContainer (bundleContext: BundleContext) extends ServletContainer {
+class OsgiContainer extends ServletContainer {
+    
+    private[this] val bundleContextProviderPropertyName = classOf[BundleContextProvider].getName
+    
+    private[this] def bundleProvider(webConfig: WebConfig): BundleContextProvider = {
+        val className = Option(webConfig.getInitParameter(bundleContextProviderPropertyName))
+        val clazz = className.map { name =>
+            Thread.currentThread.getContextClassLoader.loadClass(name)
+        }.getOrElse(error("no bundle context provider class defined in param " + bundleContextProviderPropertyName))
+        val providerClazz = if(classOf[BundleContextProvider].isAssignableFrom(clazz)) {
+            clazz.asInstanceOf[Class[BundleContextProvider]]
+        } else {
+            error("bundle context provider class " + clazz + " does not implement " + bundleContextProviderPropertyName)
+        }
+        providerClazz.newInstance
+    }
+    
+    private[this] def resolveBundleContext(config: ResourceConfig) = {
+        val value = config.getProperties.get(bundleContextProviderPropertyName)
+        val provider = value.asInstanceOf[BundleContextProvider]
+        provider.bundleContext(getServletContext)
+    }
 
     override protected def getDefaultResourceConfig(props: java.util.Map[String, AnyRef],
                                                     webConfig: WebConfig): ResourceConfig = {
-        new DefaultResourceConfig()
+        val resourceConfig = new DefaultResourceConfig
+        resourceConfig.getProperties.put(bundleContextProviderPropertyName, bundleProvider(webConfig))
+        resourceConfig
     }
     
-    trait Snapshot {
+    private[this] trait Snapshot {
         def apply(config: ResourceConfig): Unit
     }
     
@@ -50,15 +80,20 @@ class OsgiContainer (bundleContext: BundleContext) extends ServletContainer {
 
     override protected def initiate(config: ResourceConfig, webapp: WebApplication) {
         if(snapshot.isEmpty) {
-            config.getSingletons.add(new JerseyStatusResource(config))
             snapshot = Some(takeSnapshot(config))
         } else {
             snapshot.get(config)
         }
-        webapp.initiate(config, new OsgiComponentProviderFactory(config, bundleContext));
+        val cl = new ChainedClassLoader(Thread.currentThread.getContextClassLoader, getClass.getClassLoader)
+        doWithClassLoader(cl, new Callable[Unit] {
+            def call {
+                config.getSingletons.add(new JerseyStatusResource(config))
+                webapp.initiate(config, new OsgiComponentProviderFactory(config, resolveBundleContext(config)));
+            }
+        })
     }
 
-    def takeSnapshot(config: ResourceConfig) = new Snapshot {
+    private[this] def takeSnapshot(config: ResourceConfig) = new Snapshot {
         val classes = new java.util.HashSet(config.getClasses)
         val singletons = new java.util.HashSet(config.getSingletons)
         val features = new java.util.HashMap[String, java.lang.Boolean](config.getFeatures) 
@@ -89,8 +124,12 @@ class OsgiContainer (bundleContext: BundleContext) extends ServletContainer {
 @Path("status")
 class JerseyStatusResource(config: ResourceConfig) {
     
+    var uriInfo: UriInfo = _
+    
     @Context
-    val uriInfo: UriInfo = uriInfo
+    def setUriInfo(info: UriInfo) {
+        uriInfo = info
+    }
     
     @GET
     @Produces(Array("text/html"))
@@ -147,6 +186,7 @@ class JerseyStatusResource(config: ResourceConfig) {
             case head :: tail => Option(head.getAnnotation(classOf[Path]))
                                     .map(_ => head)
                                     .getOrElse(resolve(tail))
+            case Nil => error("could not locate @Path annotation for " + clazz)
         }
 
         if (clazz.getAnnotation(classOf[Path]) == null) {
@@ -158,5 +198,39 @@ class JerseyStatusResource(config: ResourceConfig) {
     
     def rootResourceSingletonInfo(obj: AnyRef): NodeSeq = {
         rootResourceClassInfo(obj.getClass)
+    }
+}
+
+class ChainedClassLoader(classloaders: ClassLoader*) extends ClassLoader {
+    
+    val classloaderList = classloaders.toList
+    
+    def find[A<:AnyRef](loaders: List[ClassLoader],
+                        f: ClassLoader => Option[A]) : Option[A] = loaders match {
+        case head :: tail => f(head).orElse(find(tail, f))
+        case Nil => None
+    }
+    
+    override def getResource(name: String): URL = {
+        find(classloaderList, cl => Option(cl.getResource(name))).orNull
+    }
+    
+    override def findResources(name: String): java.util.Enumeration[URL] = {
+        val listOfIterators = for (cl <- classloaderList) yield (IteratorUtils.asIterator(cl.getResources(name)))
+        val result = IteratorUtils.chainedIterator(listOfIterators);
+        IteratorUtils.asEnumeration(result).asInstanceOf[java.util.Enumeration[URL]]
+    }
+    
+    override def loadClass(name: String): Class[_] = {
+        
+        def loadClass(cl: ClassLoader): Option[Class[_]] = {
+            try {
+                Some(cl.loadClass(name))
+            } catch {
+                case ex: ClassNotFoundException => None
+            }
+        }
+        
+        find(classloaderList, loadClass(_)).getOrElse(throw new ClassNotFoundException(name))
     }
 }

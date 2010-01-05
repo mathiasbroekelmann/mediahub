@@ -97,6 +97,11 @@
             -->
                         <_include>-osgi.bnd</_include>
                     </instructions>
+                    <supportedProjectTypes>
+                        <supportedProjectType>jar</supportedProjectType>
+                        <supportedProjectType>bundle</supportedProjectType>
+                        <supportedProjectType>war</supportedProjectType>
+                    </supportedProjectTypes>
                 </configuration>
             </plugin>
         </plugins>

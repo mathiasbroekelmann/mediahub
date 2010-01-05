@@ -1,2 +1,8 @@
 runner
 target
+.classpath
+.project
+.scala_dependencies
+.settings
+.scala_dependencies
+.springBeans

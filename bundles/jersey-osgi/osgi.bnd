@@ -2,17 +2,13 @@
 # Use this file to add customized Bnd instructions for the bundle
 #-----------------------------------------------------------------
 
-Embed-Dependency: *;groupId=com.sun.jersey;scope=compile|runtime;type=!pom;inline=false
-
-Private-Package: com.sun.jersey.server.impl*;-split-package:=merge-first
-
 Export-Package: \
- com.sun.jersey.spi*;version=1.1.4,\
+ com.sun.jersey*;version=1.1.4,\
  ${bundle.namespace}*;version=${project.version}
  
-
 Import-Package: \
- !com.sun*,\
+ !com.sun.grizzly*,\
+ !com.sun.net.httpserver*,\
  !org.apache.tools.ant*,\
  !javax.ejb*,\
  !javax.enterprise*,\

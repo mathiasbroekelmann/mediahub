@@ -26,6 +26,7 @@
         <cxf.version>2.2.5</cxf.version>
         <spring.version>2.5.6</spring.version>
         <spring.dm.version>1.2.1</spring.dm.version>
+        <pax-web.version>0.7.2</pax-web.version>
         <bundles.configuration.location>${basedir}/src/main/configurations</bundles.configuration.location>
         <org.ops4j.pax.logging.DefaultServiceLog.level>ERROR</org.ops4j.pax.logging.DefaultServiceLog.level>
     </properties>
@@ -206,10 +207,14 @@
                 <version>1.0-SNAPSHOT</version>
             </dependency>
             <dependency>
-                <groupId>javax.ws.rs</groupId>
-                <artifactId>jsr311-api</artifactId>
-                <version>1.0</version>
-                <scope>provided</scope>
+                <groupId>org.mediahub.bundles</groupId>
+                <artifactId>jersey-osgi</artifactId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.servicemix.specs</groupId>
+                <artifactId>org.apache.servicemix.specs.jsr311-api-1.1</artifactId>
+                <version>1.4.0</version>
             </dependency>
             <dependency>
                 <groupId>com.google.inject</groupId>
@@ -264,6 +269,11 @@
                 <version>${spring.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-webmvc</artifactId>
+                <version>${spring.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.springframework.osgi</groupId>
                 <artifactId>spring-osgi-io</artifactId>
                 <version>${spring.dm.version}</version>
@@ -271,6 +281,11 @@
             <dependency>
                 <groupId>org.springframework.osgi</groupId>
                 <artifactId>spring-osgi-core</artifactId>
+                <version>${spring.dm.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.osgi</groupId>
+                <artifactId>spring-osgi-web</artifactId>
                 <version>${spring.dm.version}</version>
             </dependency>
             <dependency>
