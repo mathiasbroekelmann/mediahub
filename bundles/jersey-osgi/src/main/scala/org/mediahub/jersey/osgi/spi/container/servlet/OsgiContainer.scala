@@ -16,13 +16,14 @@ import javax.ws.rs.{Path, GET, Produces}
 import java.net.URL
 import java.util.concurrent.Callable
 
-import org.osgi.framework.BundleContext
+import org.osgi.framework.{BundleContext, Bundle}
 
 import scala.collection.JavaConversions._
 
 import scala.xml._
 
 import org.ops4j.pax.swissbox.core.ContextClassLoaderUtils.doWithClassLoader
+import org.ops4j.pax.swissbox.core.BundleClassLoader.newPriviledged
 
 import org.apache.commons.collections.IteratorUtils
 
@@ -43,10 +44,11 @@ import org.apache.commons.collections.IteratorUtils
  * @author Mathias Broekelmann
  */
 class OsgiContainer extends ServletContainer {
-    
+
     private[this] val bundleContextProviderPropertyName = classOf[BundleContextProvider].getName
-    
-    private[this] def bundleProvider(webConfig: WebConfig): BundleContextProvider = {
+    private[this] val bundleContextPropertyName = classOf[BundleContext].getName
+
+    private[this] def bundleContext(webConfig: WebConfig): BundleContext = {
         val className = Option(webConfig.getInitParameter(bundleContextProviderPropertyName))
         val clazz = className.map { name =>
             Thread.currentThread.getContextClassLoader.loadClass(name)
@@ -56,20 +58,29 @@ class OsgiContainer extends ServletContainer {
         } else {
             error("bundle context provider class " + clazz + " does not implement " + bundleContextProviderPropertyName)
         }
-        providerClazz.newInstance
+        providerClazz.newInstance.bundleContext(webConfig.getServletContext)
     }
     
     private[this] def resolveBundleContext(config: ResourceConfig) = {
-        val value = config.getProperties.get(bundleContextProviderPropertyName)
-        val provider = value.asInstanceOf[BundleContextProvider]
-        provider.bundleContext(getServletContext)
+        val value = config.getProperties.get(bundleContextPropertyName)
+        value.asInstanceOf[BundleContext]
     }
 
     override protected def getDefaultResourceConfig(props: java.util.Map[String, AnyRef],
                                                     webConfig: WebConfig): ResourceConfig = {
         val resourceConfig = new DefaultResourceConfig
-        resourceConfig.getProperties.put(bundleContextProviderPropertyName, bundleProvider(webConfig))
+        resourceConfig.getProperties.put(bundleContextPropertyName, bundleContext(webConfig))
         resourceConfig
+    }
+    
+    /**
+     * creates a classloader which sees all bundle classspaces.
+     */
+    def bundlesClassLoader(context: BundleContext): ClassLoader = {
+        val cls = for(bundle <- context.getBundles; 
+                      if (bundle.getState & (Bundle.STARTING | Bundle.ACTIVE)) != 0)
+            yield (newPriviledged(bundle))
+        new ChainedClassLoader(cls:_*)
     }
     
     private[this] trait Snapshot {
@@ -77,6 +88,19 @@ class OsgiContainer extends ServletContainer {
     }
     
     private[this] var snapshot: Option[Snapshot] = None
+    
+    private[this] def superInit(webConfig: WebConfig) {
+        super.init(webConfig)
+    }
+    
+    override protected def init(webConfig: WebConfig) {
+        val cl = bundlesClassLoader(bundleContext(webConfig))
+        doWithClassLoader(cl, new Callable[Unit] {
+            def call {
+                superInit(webConfig)
+            }
+        })
+    }
 
     override protected def initiate(config: ResourceConfig, webapp: WebApplication) {
         if(snapshot.isEmpty) {
@@ -84,13 +108,8 @@ class OsgiContainer extends ServletContainer {
         } else {
             snapshot.get(config)
         }
-        val cl = new ChainedClassLoader(Thread.currentThread.getContextClassLoader, getClass.getClassLoader)
-        doWithClassLoader(cl, new Callable[Unit] {
-            def call {
-                config.getSingletons.add(new JerseyStatusResource(config))
-                webapp.initiate(config, new OsgiComponentProviderFactory(config, resolveBundleContext(config)));
-            }
-        })
+        config.getSingletons.add(new JerseyStatusResource(config))
+        webapp.initiate(config, new OsgiComponentProviderFactory(config, resolveBundleContext(config)));
     }
 
     private[this] def takeSnapshot(config: ResourceConfig) = new Snapshot {
