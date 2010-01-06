@@ -18,6 +18,8 @@ import java.util.concurrent.Callable
 
 import scala.collection.JavaConversions._
 
+import org.mediahub.jersey.osgi.spi.container.utils.ClassLoader._
+
 /**
  * Tracks for osgi services and register provider and root resources in the provided resource config instance.
  * 
@@ -40,8 +42,8 @@ class OsgiComponentProviderFactory (val config: ResourceConfig, val bundleContex
     }
 
     def reload {
-        val classLoader = newPriviledged(bundleContext.getBundle, Thread.currentThread.getContextClassLoader)
-        doWithClassLoader(classLoader, new Callable[Unit] {
+        val cl = bundlesClassLoader(bundleContext)
+        doWithClassLoader(cl, new Callable[Unit] {
             def call {
                 containerListener foreach (_.onReload)
             }

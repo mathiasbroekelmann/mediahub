@@ -1,5 +1,7 @@
 package org.mediahub.jersey.osgi.spi.container.servlet
 
+import org.mediahub.jersey.osgi.spi.container.utils.ClassLoader._
+
 import com.sun.jersey.spi.container.servlet.ServletContainer
 import com.sun.jersey.api.core.DefaultResourceConfig;
 import com.sun.jersey.api.core.ResourceConfig;
@@ -8,24 +10,20 @@ import com.sun.jersey.spi.container.servlet.WebConfig;
 
 import org.mediahub.jersey.osgi.spi.container._
 
+import scala.collection.JavaConversions._
+
 import org.osgi.service.http.HttpService
 
 import javax.ws.rs.core.{Application, MediaType, Context, UriInfo, UriBuilder}
 import javax.ws.rs.{Path, GET, Produces}
 
-import java.net.URL
 import java.util.concurrent.Callable
 
 import org.osgi.framework.{BundleContext, Bundle}
 
-import scala.collection.JavaConversions._
-
 import scala.xml._
 
 import org.ops4j.pax.swissbox.core.ContextClassLoaderUtils.doWithClassLoader
-import org.ops4j.pax.swissbox.core.BundleClassLoader.newPriviledged
-
-import org.apache.commons.collections.IteratorUtils
 
 /**
  * A {@link Servlet} or {@link Filter} for deploying root resource classes
@@ -71,16 +69,6 @@ class OsgiContainer extends ServletContainer {
         val resourceConfig = new DefaultResourceConfig
         resourceConfig.getProperties.put(bundleContextPropertyName, bundleContext(webConfig))
         resourceConfig
-    }
-    
-    /**
-     * creates a classloader which sees all bundle classspaces.
-     */
-    def bundlesClassLoader(context: BundleContext): ClassLoader = {
-        val cls = for(bundle <- context.getBundles; 
-                      if (bundle.getState & (Bundle.STARTING | Bundle.ACTIVE)) != 0)
-            yield (newPriviledged(bundle))
-        new ChainedClassLoader(cls:_*)
     }
     
     private[this] trait Snapshot {
@@ -217,39 +205,5 @@ class JerseyStatusResource(config: ResourceConfig) {
     
     def rootResourceSingletonInfo(obj: AnyRef): NodeSeq = {
         rootResourceClassInfo(obj.getClass)
-    }
-}
-
-class ChainedClassLoader(classloaders: ClassLoader*) extends ClassLoader {
-    
-    val classloaderList = classloaders.toList
-    
-    def find[A<:AnyRef](loaders: List[ClassLoader],
-                        f: ClassLoader => Option[A]) : Option[A] = loaders match {
-        case head :: tail => f(head).orElse(find(tail, f))
-        case Nil => None
-    }
-    
-    override def getResource(name: String): URL = {
-        find(classloaderList, cl => Option(cl.getResource(name))).orNull
-    }
-    
-    override def findResources(name: String): java.util.Enumeration[URL] = {
-        val listOfIterators = for (cl <- classloaderList) yield (IteratorUtils.asIterator(cl.getResources(name)))
-        val result = IteratorUtils.chainedIterator(listOfIterators);
-        IteratorUtils.asEnumeration(result).asInstanceOf[java.util.Enumeration[URL]]
-    }
-    
-    override def loadClass(name: String): Class[_] = {
-        
-        def loadClass(cl: ClassLoader): Option[Class[_]] = {
-            try {
-                Some(cl.loadClass(name))
-            } catch {
-                case ex: ClassNotFoundException => None
-            }
-        }
-        
-        find(classloaderList, loadClass(_)).getOrElse(throw new ClassNotFoundException(name))
     }
 }
