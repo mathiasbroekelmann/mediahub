@@ -4,5 +4,4 @@ target
 .project
 .scala_dependencies
 .settings
-.scala_dependencies
 .springBeans
