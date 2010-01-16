@@ -34,6 +34,7 @@
     <module>web-scopes</module>
     <module>com.sun.jersey.server</module>
     <module>com.sun.jersey.core</module>
+    <module>web-links</module>
   </modules>
 
 </project>
