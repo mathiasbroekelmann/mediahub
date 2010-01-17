@@ -13,10 +13,28 @@ import scala.collection.JavaConversions._
 
 import scala.reflect.ClassManifest._
 
+import java.lang.reflect.{Type, ParameterizedType}
+
 object Links extends Links(null) {
   implicit def linkBuilderToString(builder: LinkBuilder): String = {
     builder.build.map(x =>
       x.toString).getOrElse(error("not a valid link spec: " + builder))
+  }
+
+  /**
+   * collect all elements in the given list by the given filter.
+   * use this if you have an service interface which defines generic type parameters and
+   * implementations for certain type definitions of that generic types.
+   * you can filter that list for specific types to collect the services whose generic type definitions passes the given matcher.
+   */
+  def typeOf[A<:AnyRef](input: Seq[A], matcher: Seq[Type] => Boolean) (implicit clazz: ClassManifest[A]): Seq[A] = {
+    for(element <- input;
+        itf <- element.getClass.getGenericInterfaces;
+        if itf.isInstanceOf[ParameterizedType];
+        pt <- Seq(itf.asInstanceOf[ParameterizedType]);
+        if pt.getRawType == classOf[A];
+        if matcher(pt.getActualTypeArguments))
+          yield element
   }
 }
 
@@ -36,19 +54,23 @@ trait LinkContext {
   /**
    * resolve the UriBuilder initialized with the base uri for the given class type.
    */
-  def baseUri[A<:AnyRef](clazz: ClassManifest[A]): Option[UriBuilder]
+  def baseUri[A<:AnyRef](implicit clazz: ClassManifest[A]): Option[UriBuilder] = None
+
+  def resolver: Seq[LinkResolver[AnyRef]] = Seq.empty
 
   /**
    * get all link resolvers that can handle the defined class type.
    */
-  def resolverFor[A<:AnyRef](clazz: ClassManifest[A]): Seq[LinkResolver[A]]
+  def resolverFor[A<:AnyRef](implicit clazz: ClassManifest[A]): Seq[LinkResolver[AnyRef]] = {
+    Links.typeOf(resolver, _.head == clazz.erasure)
+  }
 
   /**
    * convienience function to create a uri part builder with the base uri for the given class type.
    */
-  def baseUriBuilder[A<:AnyRef](clazz: ClassManifest[A]) = new UriPartBuilder {
+  def baseUriBuilder[A<:AnyRef](implicit clazz: ClassManifest[A]) = new UriPartBuilder {
     def apply(builder: Option[UriBuilder], chain: UriBuilderChain): Option[URI] = {
-      chain(baseUri(clazz))
+      chain(baseUri[A])
     }
   }
 }
