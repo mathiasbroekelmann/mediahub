@@ -56,14 +56,18 @@ object Links extends Links(null) {
 trait LinkContext {
 
   /**
-   * resolve the base uri for the given class type.
+   * Resolve the base uri for the given class type.
    */
   def baseUri[A<:AnyRef](implicit clazz: ClassManifest[A]): Option[URI] = None
 
+  /**
+   * Provide the list of all available link resolvers.
+   */
   def resolver: Seq[LinkResolver[_]] = Seq.empty
 
   /**
-   * get all link resolvers that can handle the defined class type.
+   * Get all link resolvers that can handle the defined class type.
+   * TODO: find a way to order the resolvers.
    */
   def resolverFor[A<:AnyRef](implicit clazz: ClassManifest[A]): Seq[LinkResolver[A]] = {
     val myclass = clazz.erasure
@@ -98,32 +102,68 @@ trait LinkResolver[A] {
   def apply(target: A, builder: ResourceLinkBuilder): Option[LinkBuilder]
 }
 
+/**
+ * A uri part builder is used to build a part of the link.
+ */
 trait UriPartBuilder {
+
+  /**
+   * Implement the rule to build the part of the link.
+   * Use the uri builder chain to pass any uri builder optionally with any parameters to the next uri part builder.
+   *
+   * @param builder the given uri builder. None if no uri builder could be determined before.
+   *                If the implementation is not able to handle None it should simply pass it to the chain#apply method
+   * @param chain   the uri builder chain which recives the given or new uri builder instance optionally with parameters that will be applied when building the final uri.
+   *
+   * @return the build uri. Normally this is just the return value from any chain#apply call.
+   *         But it is also possible to provide a different uri if the chain could not build a uri for any reason.
+   */
   def apply(builder: Option[UriBuilder], chain: UriBuilderChain): Option[URI]
 }
 
 /**
- * the uri builder chain is used internally by the link builders to build the uri.
+ * the uri builder chain is used by the link builders to build the uri.
  */
 trait UriBuilderChain {
 
   /**
    * Continue building the link by using the given uri builder.
+   *
+   * @param builder the uri builder that should be used either by the next uri part builder or if this is the
+   *                last one in the chain the uri builder that is used to build the final uri.
+   *                
+   * @return the build uri. This might be none if the uri could not be build for any reason.
    */
   def apply(builder: Option[UriBuilder]): Option[URI] = apply(builder, Map[String, AnyRef]())
 
   /**
    * Continue building the link by using the given uri builder.
    * This allows you to define a map of parameters for the final uri.
+   *
+   * @param builder the uri builder that should be used either by the next uri part builder or if this is the
+   *                last one in the chain the uri builder that is used to build the final uri.
+   * @param params  pass a map of params that will be applyed to build the uri.
+   *
+   * @return the build uri. This might be none if the uri could not be build for any reason.
    */
   def apply(builder: Option[UriBuilder], params: Map[String, AnyRef]): Option[URI]
 
+  /**
+   * Continue building the link by using the given uri builder.
+   * This allows you to define a set of 2 arg tuples of parameters for the final uri.
+   *
+   * @param builder the uri builder that should be used either by the next uri part builder or if this is the
+   *                last one in the chain the uri builder that is used to build the final uri.
+   * @param params  pass a set of 2 arg tuples of params that will be applyed to build the uri.
+   *
+   * @return the build uri. This might be none if the uri could not be build for any reason.
+   */
   def apply(builder: Option[UriBuilder], params: (String, AnyRef)*): Option[URI] = apply(builder, Map.empty ++ params)
 
 }
 
 /**
- * lets you build the uri.
+ * Build a uri.
  */
 trait LinkBuilder {
   /**
@@ -135,7 +175,7 @@ trait LinkBuilder {
 }
 
 /**
- * allows you to specify the fragment for the link
+ * Allows you to specify the fragment for the link
  */
 trait FragmentLinkBuilder extends LinkBuilder {
   /**
