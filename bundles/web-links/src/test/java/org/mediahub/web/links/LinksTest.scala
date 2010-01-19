@@ -9,7 +9,7 @@ import org.junit._
 import Assert._
 import org.hamcrest.CoreMatchers._
 
-import Links._
+import LinkBuilder._
 
 import javax.ws.rs._
 import core._
@@ -23,7 +23,7 @@ import scala.reflect.ClassManifest._
 class LinksTest {
 
   var links: Links = _
-  var context: LinkContext = _
+  implicit var context: LinkContext = _
 
   @Before
   def setUp {
@@ -33,7 +33,7 @@ class LinksTest {
       }
       override def resolver = Seq(new SomeOtherLinkResolver, new AnyRefLinkResolver, new SomeLinkResolver)
     }
-    links = new Links(context)
+    links = new Links()
   }
 
   @Test
@@ -44,6 +44,13 @@ class LinksTest {
     val linkToSomeAction: String = links.linkTo[MyRootResource].action("someAction")
     println(linkToSomeAction)
     assertThat(linkToSomeAction, is("/context/root/foo"))
+  }
+
+  @Test
+  def queryParam {
+    val linkToSomeAction: String = links.linkTo[MyRootResource].action("someAction", "q" -> "value")
+    println(linkToSomeAction)
+    assertThat(linkToSomeAction, is("/context/root/foo?q=value"))
   }
 
   @Test
@@ -63,7 +70,7 @@ class LinksTest {
   @Test
   def testResolveGenericType {
     val resolver = Seq(new SomeLinkResolver, new SomeOtherLinkResolver, new AnyRefLinkResolver)
-    val validResolvers = Links.typeOf(resolver, classOf[LinkResolver[_]], fromClass(classOf[MySubResource]).erasure)
+    val validResolvers = LinkContext.typeOf(resolver, classOf[LinkResolver[_]], fromClass(classOf[MySubResource]).erasure)
 
     println("resolvers: " + validResolvers)
   }
@@ -88,10 +95,11 @@ class SomeLinkResolver extends LinkResolver[MySubResource] {
 class MyRootResource {
 
   @Path("foo")
-  def someAction = null
+  def someAction(@QueryParam("q") q: String) = null
 
   @Path("foo/{id}")
   def sub(@PathParam("id") id: String) = null
+
 }
 
 class MySubResource(val id: String)
@@ -118,6 +126,8 @@ class SubResource {
 object Foo {
   val root = new RootResource
   val sub = new SubResource
+
+  implicit val context: LinkContext = context
 
   val html =
   <p>

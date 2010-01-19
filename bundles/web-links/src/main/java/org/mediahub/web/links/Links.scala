@@ -15,38 +15,35 @@ import scala.reflect.ClassManifest._
 
 import java.lang.reflect.{ParameterizedType}
 
-class Links(val context: LinkContext) {
+class Links(implicit val context: LinkContext) {
+
+  def linkTo[A<:AnyRef](clazz: java.lang.Class[A]): ResourceActionLinkBuilder[A] =
+    linkTo[A](fromClass(clazz))
+
+  def linkTo[A<:AnyRef](target: A)(clazz: java.lang.Class[A]): ResourceActionLinkBuilder[A] = {
+    new ResourceLinkBuilderImpl(context).resolvedBy[A](fromClass(clazz))
+  }
 
   def linkTo[A<:AnyRef](implicit clazz: ClassManifest[A]): ResourceActionLinkBuilder[A] =
     new ResourceLinkBuilderImpl(context).resolvedBy[A]
 
-
   def linkTo[A<:AnyRef](target: A)(implicit clazz: ClassManifest[A]): ResourceActionLinkBuilder[A] = {
-    new ResourceLinkBuilderImpl(context).resolvedBy(target)
+    new ResourceLinkBuilderImpl(context).resolvedBy[A](target)
   }
 }
 
-object Links extends Links(null) {
+object LinkBuilder {
+
+  def linkTo[A<:AnyRef](implicit clazz: ClassManifest[A], context: LinkContext): ResourceActionLinkBuilder[A] =
+    new Links().linkTo[A]
+
+  def linkTo[A<:AnyRef](target: A)(implicit clazz: ClassManifest[A], context: LinkContext): ResourceActionLinkBuilder[A] = {
+    new Links().linkTo[A](target)
+  }
+
   implicit def linkBuilderToString(builder: LinkBuilder): String = {
     builder.build.map(x =>
       x.toString).getOrElse(error("not a valid link spec: " + builder))
-  }
-
-  /**
-   * collect all elements in the given list by the given filter.
-   * use this if you have an service interface which defines generic type parameters and
-   * implementations for certain type definitions of that generic types.
-   * you can filter that list for specific types to collect the services whose generic type definitions passes the given matcher.
-   */
-  def typeOf[A<:AnyRef,B<:A](input: Seq[A], clazz: Class[B], genericType: Class[_]): Seq[B] = {
-    for(element <- input;
-        if element.isInstanceOf[B];
-        itf <- element.asInstanceOf[B].getClass.getGenericInterfaces;
-        if itf.isInstanceOf[ParameterizedType];
-        pt <- Seq(itf.asInstanceOf[ParameterizedType]);
-        if pt.getRawType == clazz;
-        if pt.getActualTypeArguments()(0).asInstanceOf[Class[_]].isAssignableFrom(genericType))
-          yield element.asInstanceOf[B]
   }
 }
 
@@ -71,7 +68,7 @@ trait LinkContext {
    */
   def resolverFor[A<:AnyRef](implicit clazz: ClassManifest[A]): Seq[LinkResolver[A]] = {
     val myclass = clazz.erasure
-    Links.typeOf(resolver, classOf[LinkResolver[A]], myclass)
+    LinkContext.typeOf(resolver, classOf[LinkResolver[A]], myclass)
   }
 
   /**
@@ -83,6 +80,25 @@ trait LinkContext {
         baseUri[A]
         .map(UriBuilder.fromUri(_)))
     }
+  }
+}
+
+object LinkContext {
+  /**
+   * collect all elements in the given list by the given filter.
+   * use this if you have an service interface which defines generic type parameters and
+   * implementations for certain type definitions of that generic types.
+   * you can filter that list for specific types to collect the services whose generic type definitions passes the given matcher.
+   */
+  def typeOf[A<:AnyRef,B<:A](input: Seq[A], clazz: Class[B], genericType: Class[_]): Seq[B] = {
+    for(element <- input;
+        if element.isInstanceOf[B];
+        itf <- element.asInstanceOf[B].getClass.getGenericInterfaces;
+        if itf.isInstanceOf[ParameterizedType];
+        pt <- Seq(itf.asInstanceOf[ParameterizedType]);
+        if pt.getRawType == clazz;
+        if pt.getActualTypeArguments()(0).asInstanceOf[Class[_]].isAssignableFrom(genericType))
+          yield element.asInstanceOf[B]
   }
 }
 
@@ -204,7 +220,7 @@ trait ResourceActionLinkBuilder[A] extends ResourceLinkBuilder {
 
   def action(methodName: String, params: Map[String, AnyRef]): ResourceLinkBuilder
 
-  def action(methodName: String, params: Seq[AnyRef]): ResourceLinkBuilder
+  // def action(methodName: String, params: Seq[AnyRef]): ResourceLinkBuilder
 
   def action(methodName: String, param: (String, AnyRef), others: (String, AnyRef)*): ResourceLinkBuilder = {
     action(methodName, Map(param) ++ others)
@@ -264,9 +280,28 @@ class ResourceActionLinkBuilderImpl[A](context: LinkContext,
   }
 
   def action(methodName: String, params: Map[String, AnyRef]): ResourceLinkBuilder = {
+    val method = clazz.getMethods
+                      .find(_.getName == methodName)
+                      .getOrElse(error("could not find method with name %s in class %s".format(methodName, clazz)))
+    val pathParamNames = for(paramAnnotations <- method.getParameterAnnotations;
+                             a <- paramAnnotations;
+                             if(a.isInstanceOf[PathParam]))
+                         yield (a.asInstanceOf[PathParam].value)
+    val pathParams = Map.empty ++ params.filterKeys(pathParamNames.contains(_))
+    val queryParamNames = for(paramAnnotations <- method.getParameterAnnotations;
+                              a <- paramAnnotations;
+                              if(a.isInstanceOf[QueryParam]))
+                          yield (a.asInstanceOf[QueryParam].value)
+    val queryParams = params.filterKeys(queryParamNames.contains(_))
     def path = new UriPartBuilder {
       def apply(uriBuilder: Option[UriBuilder], chain: UriBuilderChain): Option[URI] = {
-        chain(uriBuilder.map(_.path(clazz, methodName)), params)
+        val myUriBuilder = uriBuilder.map(b => {
+            queryParamNames.foldLeft(b)((builder, name) =>
+              params.get(name)
+                    .map(builder.queryParam(name, _))
+                    .getOrElse(builder))
+          })
+        chain(myUriBuilder.map(_.path(method)), pathParams)
       }
     }
     new ResourceLinkBuilderImpl(context, builders :+ path)
