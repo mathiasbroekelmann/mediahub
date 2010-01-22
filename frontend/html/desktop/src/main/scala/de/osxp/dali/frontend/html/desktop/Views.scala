@@ -35,7 +35,7 @@ trait ViewBinder {
  * bind the actual view.
  */
 trait ViewBindingBuilder[A] {
-  def to[B<:Any](f: (B => A)): Unit
+  def to[B](f: (B => A)): Unit
 
   // add more to ... methods for other kinds of view implementations.
 }
@@ -43,8 +43,8 @@ trait ViewBindingBuilder[A] {
 /**
  * bind the actual parameterized view.
  */
-trait ParamViewBindingBuilder[A, B] {
-  def to[C<:Any](f: (C => (B => A))): Unit
+trait ParamViewBindingBuilder[A, B] extends ViewBindingBuilder[A] {
+  def to[C](f: (C, B) => A): Unit
 
   // add more to ... methods for other kinds of view implementations.
 }
@@ -108,7 +108,8 @@ trait Content
 object Body extends ViewClassifier[NodeSeq]
 object Content extends ViewClassifier[NodeSeq]
 // example view classifier which accepts parameters. This defines the types of the parameters
-object ParamView extends ParamViewClassifier[NodeSeq, (String, Content)]
+case class MyParam(val someString: String, val someContent: Content)
+object ParamView extends ParamViewClassifier[NodeSeq, MyParam]
 
 // example module which binds some views
 trait  MyViewModule extends ViewModule {
@@ -137,7 +138,7 @@ trait  MyViewModule extends ViewModule {
       }
       <div>
         <!-- render a parameterized view -->
-        {render(page) as ParamView withParameter ("foo", page.teaser.head)}
+        {render(page) as ParamView withParameter MyParam("foo", page)}
         <!-- this will not pass the compiler: -->
         <!-- {render(page) as ParamView withParameter ("foo", 1234)} -->
       </div>
@@ -155,15 +156,21 @@ trait  MyViewModule extends ViewModule {
 
   /**
    * example for a view binding which provides additional parameters
+   * param is of type (String, Content)
    */
-  bindView(ParamView) to { page: SomePage =>
-    // param is of type (String, Content)
-    { param =>
-      // str is implicit type String
-      // content is implicit type Content
-      val (str, content) = param
-      NodeSeq.Empty
-    }
+  bindView(ParamView).to { (page: SomePage, param: MyParam) =>
+    // we can import the param functions
+    import param._
+    // and use the parameters in the view
+    Text(someString)
+  }
+
+  /**
+   * It is also possible to bind a view to a parameterized view which ignores the given parameters.
+   * This simplifies the view definitions where the view doesn't need the parameters.
+   */
+  bindView(ParamView).to { (page: SomePage) =>
+    NodeSeq.Empty
   }
 
   /**
