@@ -201,14 +201,7 @@ trait  MyViewModule extends ViewModule {
    * It is also possible to bind a view to a parameterized view which ignores the given parameters.
    * This simplifies the view definitions where the view doesn't need the parameters.
    */
-  bindView(ParamView).to { (page: SomePage) =>
+  bindView(ParamView).to { page: SomePage =>
     NodeSeq.Empty
   }
-
-  /**
-   * This would not compile!
-  bindView(ParamView) to { page: SomePage =>
-      NodeSeq.Empty
-  }
-   */
 }
