@@ -171,8 +171,8 @@ trait  MyViewModule extends ViewModule {
       <div>
         <!-- render a parameterized view -->
         {render(page) as ParamView withParameter MyParam("foo", page)}
-        <!-- this will not pass the compiler: -->
-        <!-- {render(page) as ParamView withParameter ("foo", 1234)} -->
+        <!-- this will not pass the compiler since "bar" is not of type Content: -->
+        <!-- {render(page) as ParamView withParameter MyParam("foo", "bar")} -->
       </div>
     </body>
   }
