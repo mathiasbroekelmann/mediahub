@@ -1,40 +1,66 @@
 package org.mediahub.frontend.html.desktop
 
 import scala.xml._
-import com.google.inject._
 
 /**
- * common view classifier
+ * Scala based DSL for view definitions.
+ *
+ * This DSL is 100% independent of the context where views are used. It is possible to use it in a jee environment but also in plain jse environent.
+ *
+ * The core concept is that one can define a view for a given type.
+ * A view can be expressed as view(x) = y. x is a given instance and y is the result of the view.
+ * 
+ * To find a view(x) the type hierarchy of x is evaluated from bottom to top to find the most concrete view definition for x.
+ *
+ * A view classifier is used to differenciate views for x. That classifier also defines the type of y.
+ *
+ * Since views may need parameters from the context where they are used it is also possible to define view classifiers with parameter types.
+ *
+ * TODO: it is actually possible to define more than one view definition for the same view classifier and type.
+ */
+
+/**
+ * Common view classifier. Identifies a view.
  * type A defines the output of the view (String, NodeSeq, ...)
  */
 abstract case class ViewClassifier[A]
 
 /**
- * special view classifier which allows the definition of parameters
+ * Special view classifier which allows the definition of parameters
  * type A defines the output of the view (String, NodeSeq, ...)
  * type B defines the view parameters type(s).
  */
 abstract case class ParamViewClassifier[A, B]
 
 /**
- * the view binder allows binding of views
+ * The view binder allows binding of views definitions. The kind of view depends on the provided view classifier.
  */
 trait ViewBinder {
   /**
-   * bind a common view which doesn't habe view parameters
+   * Binds an ordinary view which doesn't have view parameters.
+   *
+   * @param classifier the view classifier to bind a view for.
+   *
+   * @return a view binding builder to bind the actual view definition.
    */
   def bindView[A](classifier: ViewClassifier[A]): ViewBindingBuilder[A]
 
   /**
-   * bind a view with parameters.
+   * Bind a view for a paramterized view. Variant of #bindView(ViewClassifier) to support view parameters.
+   *
+   * @param classifier the view classifier to bind a view for.
+   * @return a view binding builder to bind the actual view definition optionally receiving the provided parameters.
    */
   def bindView[A, B](classifier: ParamViewClassifier[A, B]): ParamViewBindingBuilder[A, B]
 }
 
 /**
- * bind the actual view.
+ * Allows binding of a view definition.
  */
 trait ViewBindingBuilder[A] {
+  /**
+   * Define a view f(B) = A.
+   */
   def to[B](f: (B => A)): Unit
 
   // add more to ... methods for other kinds of view implementations.
@@ -61,7 +87,7 @@ trait ViewModule extends ViewBinder {
 
   /**
    * start defining to render a view for a given instance.
-   * convinience function to use where include doesn't sound good.
+   * convienience function to use where include doesn't sound good.
    */
   def render[A<:Any](bean: A): IncludeViewBuilder = include(bean)
 }
@@ -76,12 +102,12 @@ trait IncludeViewBuilder {
   /**
    * render the given common view for the previously defined bean instance.
    */
-  def as[B](classifier: ViewClassifier[B]): B
+  def as[A](classifier: ViewClassifier[A]): A
 
   /**
    * render the given parameterized view for the previously defined bean instance.
    */
-  def as[B, C](classifier: ParamViewClassifier[B, C]): ParamIncludeViewBuilder[B, C]
+  def as[A, B](classifier: ParamViewClassifier[A, B]): ParamIncludeViewBuilder[A, B]
 }
 
 /**
@@ -91,6 +117,10 @@ trait IncludeViewBuilder {
  * B: param type
  */
 trait ParamIncludeViewBuilder[A, B] {
+
+  /**
+   * Define the parameter instance to be passed to the view definition.
+   */
   def withParameter(p: B): A
 }
 
@@ -119,13 +149,15 @@ trait  MyViewModule extends ViewModule {
     <body>
       <h1>{page.title}</h1>
       {
-        <!-- variable assignment -->
+        // variable assignment
         val pageTeaser = page.teaser
-        <!-- verify condition -->
+        // we could also import that property:
+        //import page.{teaser => pageTeaser}
+        // verify a condition
         if(!pageTeaser.isEmpty) {
           <ul>
             {
-              <!-- iteration over content -->
+              // iteration over content
               for(teaser <- pageTeaser) yield {
                 <li>
                   <!-- render a nested view -->
