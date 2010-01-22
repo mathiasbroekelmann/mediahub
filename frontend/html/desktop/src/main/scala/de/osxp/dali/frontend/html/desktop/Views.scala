@@ -82,7 +82,7 @@ trait ViewRegistry {
   /**
    * register a view binding.
    */
-  def register(binding: ViewBinding[_, _]): ViewBindingRegistration
+  def register[A](binding: ClassifiedBinding[A]): ViewBindingRegistration
 
   /**
    * resolve a view binding.

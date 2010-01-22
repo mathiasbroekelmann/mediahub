@@ -32,7 +32,7 @@ class Links(implicit val context: LinkContext) {
   }
 }
 
-object LinkBuilder {
+object Links {
 
   def linkTo[A<:AnyRef](implicit clazz: ClassManifest[A], context: LinkContext): ResourceActionLinkBuilder[A] =
     new Links().linkTo[A]

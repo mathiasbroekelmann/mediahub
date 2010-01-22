@@ -9,7 +9,7 @@ import org.junit._
 import Assert._
 import org.hamcrest.CoreMatchers._
 
-import LinkBuilder._
+import Links._
 
 import javax.ws.rs._
 import core._

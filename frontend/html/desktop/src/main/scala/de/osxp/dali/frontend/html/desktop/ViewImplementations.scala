@@ -1,6 +1,7 @@
 package org.mediahub.frontend.html.desktop
 
 import scala.actors.Actor._
+import org.mediahub.util.Types._
 
 class ViewRegistryImpl extends ViewRegistry {
 
@@ -29,7 +30,7 @@ class ViewRegistryImpl extends ViewRegistry {
           case Resolve(classifier, clazz) => {
               val key = BindingKey(classifier, clazz)
               val binding = classifiedBindings.getOrElse(key, {
-                  val resolvedBinding = resolve(classifier, clazz)
+                  val resolvedBinding = resolve(bindings, classifier, clazz)
                   classifiedBindings += key -> resolvedBinding
                   resolvedBinding
                 }
@@ -40,9 +41,12 @@ class ViewRegistryImpl extends ViewRegistry {
       }
     }
 
-    def resolve[A](classifier: Classifier, clazz: Class[A]): Option[ClassifiedBinding[A]] = {
+    def resolve[A](bindings: Iterable[ClassifiedBinding[_]], classifier: Classifier, clazz: Class[A]): Option[ClassifiedBinding[A]] = {
       // TODO: implement actual resolving of view binding
-      val binding: Option[ClassifiedBinding[A]] = error("NYI")
+      val types = typesOf(clazz)
+      val binding = types.find { clazz =>
+        bindings.find(b => b.classifier == classifier && b.clazz == clazz).isDefined
+      }.map(_.asInstanceOf[ClassifiedBinding[A]])
       binding.flatMap { b =>
         if(classifier.isValid(b)) Some(b) else None
       }
