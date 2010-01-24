@@ -1,4 +1,4 @@
-package org.mediahub.frontend.html.desktop
+package org.mediahub.views
 
 import scala.xml._
 
@@ -22,7 +22,13 @@ import scala.xml._
 /**
  * A Classifier for a view.
  */
-trait Classifier {
+
+abstract class Classifier[A](clazz: ClassManifest[A]) {
+
+  /**
+   * the type of the view result.
+   */
+  val resultType = clazz.erasure.asInstanceOf[Class[A]]
 
   /**
    * determine of the binding is valid for this classifier.
@@ -34,7 +40,8 @@ trait Classifier {
  * Common view classifier. Identifies a view.
  * type A defines the output of the view (String, NodeSeq, ...)
  */
-abstract case class ViewClassifier[A] extends Classifier {
+abstract case class ViewClassifier[A](implicit clazz: ClassManifest[A]) extends Classifier[A](clazz) {
+
   override def isValid(binding: ClassifiedBinding[_]) = binding match {
     case x: ViewBinding[_, _] => true
     case _ => false
@@ -46,7 +53,8 @@ abstract case class ViewClassifier[A] extends Classifier {
  * type A defines the output of the view (String, NodeSeq, ...)
  * type B defines the view parameters type(s).
  */
-abstract case class ParamViewClassifier[A, B] extends Classifier {
+abstract case class ParamViewClassifier[A, B](implicit clazz: ClassManifest[A]) extends Classifier[A](clazz) {
+
   override def isValid(binding: ClassifiedBinding[_]) = binding match {
     case x: ParameterViewBinding[_, _, _] => true
     case _ => false
@@ -85,14 +93,14 @@ trait ViewRegistry {
   def register[A](binding: ClassifiedBinding[A]): ViewBindingRegistration
 
   /**
-   * resolve a view binding.
+   * Resolve view bindings for a view classifier and a type.
    */
-  def resolve[A, B](classifier: ViewClassifier[B])(implicit clazz: ClassManifest[A]): Option[ViewBinding[A, B]]
+  def resolve[A, B](classifier: ViewClassifier[B])(implicit clazz: ClassManifest[A]): Seq[ViewBinding[A, B]]
 
   /**
-   * resolve a parameterized view binding.
+   * Resolve view bindings for a parameterized view classifier and a type.
    */
-  def resolve[A, B, C](classifier: ParamViewClassifier[C, B])(implicit clazz: ClassManifest[A]): Option[ParameterViewBinding[A, B, C]]
+  def resolve[A, B, C](classifier: ParamViewClassifier[C, B])(implicit clazz: ClassManifest[A]): Seq[ParameterViewBinding[A, B, C]]
 }
 
 /**
@@ -118,7 +126,7 @@ trait ClassifiedBinding[A] {
   /**
    * The classifier of this binding.
    */
-  def classifier: Classifier
+  def classifier: Classifier[_]
 }
 
 /**
@@ -179,7 +187,6 @@ trait TypedViewBindingBuilder[A, B] {
  * Allows binding of a view definition.
  */
 trait ViewBindingBuilder[A] {
-
   def of[B](implicit clazz: ClassManifest[B]): TypedViewBindingBuilder[A, B]
 }
 
@@ -199,26 +206,33 @@ trait TypedParamViewBindingBuilder[A, B, C] extends TypedViewBindingBuilder[A, C
 /**
  * bind the actual parameterized view.
  */
-trait ParamViewBindingBuilder[A, B] extends ViewBindingBuilder[A] {
+trait ParamViewBindingBuilder[A, B] {
   def of[C](implicit clazz: ClassManifest[C]): TypedParamViewBindingBuilder[A, B, C]
 }
 
+/**
+ * a view renderer resolves is the starting point to render views for bean instances.
+ */
 trait ViewRenderer {
-  
+
   /**
    * render a view for a given instance.
    */
-  def render[A<:Any](bean: A): IncludeViewBuilder
+  def render(bean: Any): IncludeViewBuilder
+
+  /**
+   * create a renderer which uses the given function if no view could be found for a given classifier and the expected result type.
+   */
+  def withDefaultFor[A](f: (Any, Classifier[_]) => A)(implicit resultType: ClassManifest[A]): ViewRenderer
+
+  /**
+   * create a view renderer which uses the given function to resolve the class from an instance to find view bindings.
+   */
+  def withClassResolver(resolver: ClassResolver): ViewRenderer
 }
 
-/**
- * the contract for a view module that defines the #render function to include other views.
- */
-trait ViewModule extends ViewBinder with ViewRenderer {
-  /**
-   * start defining an inclusion of a view for a given instance.
-   */
-  def include[A<:Any](bean: A) = render(bean)
+trait ClassResolver {
+  def resolveClass[A, B>:A](some: A): Class[B]
 }
 
 /**
@@ -253,6 +267,16 @@ trait ParamIncludeViewBuilder[A, B] {
   def withParameter(p: B): A
 }
 
+/**
+ * the contract for a view module that defines the #render function to include other views.
+ */
+trait ViewModule extends ViewBinder with ViewRenderer {
+  /**
+   * start defining an inclusion of a view for a given instance.
+   */
+  def include(bean: AnyRef) = render(bean)
+}
+
 // example code to verify stuff is working
 // domain class
 trait SomePage extends Content {
@@ -273,6 +297,8 @@ object SimpleStringParamView extends ParamViewClassifier[NodeSeq, String]
 
 // example module which binds some views
 trait  MyViewModule extends ViewModule {
+
+  val defaultRenderer = withDefaultFor[NodeSeq]((bean, classifier) => NodeSeq.Empty)
 
   // bind a view of Page to the classifier body
   bindView(Body).of[SomePage] to { page =>

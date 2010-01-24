@@ -8,7 +8,7 @@ package org.mediahub.util
 object Types {
 
   /**
-   * Get the class hierarchy for the given class. The hierarchy is build in the following order:
+   * Get the class hierarchy for  the given class. The hierarchy is build in the following order:
    *
    * <ul>
    * <li>the given clazz

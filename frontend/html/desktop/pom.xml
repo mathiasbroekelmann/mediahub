@@ -10,8 +10,8 @@
     </parent>
 
     <properties>
-        <bundle.symbolicName>org.mediahub.frontend.html.desktop</bundle.symbolicName>
-        <bundle.namespace>org.mediahub.frontend.html.desktop</bundle.namespace>
+        <bundle.symbolicName>org.mediahub.views</bundle.symbolicName>
+        <bundle.namespace>org.mediahub.views</bundle.namespace>
     </properties>
 
     <modelVersion>4.0.0</modelVersion>
