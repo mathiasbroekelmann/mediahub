@@ -21,5 +21,4 @@ class DslTest {
     @Test
     def example = {
     }
-
 }
