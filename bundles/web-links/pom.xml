@@ -9,16 +9,16 @@
     </parent>
 
     <properties>
-        <bundle.symbolicName>org.mediahub.bundles.web-links</bundle.symbolicName>
+        <bundle.symbolicName>org.mediahub.web-links</bundle.symbolicName>
         <bundle.namespace>org.mediahub.web.links</bundle.namespace>
     </properties>
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.mediahub.bundles</groupId>
-    <artifactId>web-links</artifactId>
+    <artifactId>org.mediahub.web-links</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <name>${bundle.symbolicName} [${bundle.namespace}]</name>
+    <name>${bundle.symbolicName}</name>
 
     <packaging>bundle</packaging>
 
