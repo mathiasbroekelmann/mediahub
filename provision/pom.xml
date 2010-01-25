@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <parent>
         <groupId>org.mediahub</groupId>
@@ -152,7 +152,7 @@
             <artifactId>spring-core</artifactId>
             <version>${spring.version}</version>
         </dependency>
-<!--        <dependency>-->
+        <!--        <dependency>-->
 <!--            <groupId>org.apache.cxf.dosgi</groupId>-->
 <!--            <artifactId>cxf-dosgi-ri-discovery-local</artifactId>-->
 <!--            <version>1.1</version>-->
@@ -571,6 +571,16 @@
         <dependency>
             <groupId>com.sun.jersey.osgi</groupId>
             <artifactId>jsr311-api</artifactId>
+            <version>1.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.osgi</groupId>
+            <artifactId>jersey-core</artifactId>
+            <version>1.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sun.jersey.osgi</groupId>
+            <artifactId>jersey-server</artifactId>
             <version>1.2-SNAPSHOT</version>
         </dependency>
     </dependencies>
