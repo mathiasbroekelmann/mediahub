@@ -18,15 +18,8 @@ class DslTest {
 
   @Before
   def setUp {
-    val rootViewModule = new ViewInstallModule
-    val injector = Guice.createInjector(new GuiceModule, rootViewModule)
-    val viewBinder = injector.getInstance(classOf[ViewBinder])
-    rootViewModule.configureViews(viewBinder)
+    val injector = Guice.createInjector(new MyGuiceModule, new ViewInstallModule)
     renderer = injector.getInstance(classOf[ViewRenderer])
-  }
-
-  @After
-  def tearDown {
   }
 
   @Test
@@ -36,7 +29,7 @@ class DslTest {
   }
 }
 
-class GuiceModule extends AbstractModule {
+class MyGuiceModule extends AbstractModule {
 
   def configure {
     bind(classOf[MyViewModule]).in(Scopes.SINGLETON)
@@ -47,17 +40,15 @@ object html extends ViewClassifier[NodeSeq]
 object inHead extends ViewClassifier[NodeSeq]
 object body extends ViewClassifier[NodeSeq]
 
-class MyViewModule @Inject() (renderer: CustomizableViewRenderer) extends ViewModule {
+class MyViewModule extends AbstractViewModule {
 
-  def configure(viewBinder: ViewBinder) {
-    val myrenderer = renderer.withDefaultFor[NodeSeq] { (some, classifier) =>
+  override def customize(renderer: CustomizableViewRenderer) = {
+    renderer.withDefaultFor[NodeSeq] { (some, classifier) =>
       NodeSeq.Empty
     }
-    import myrenderer._
-    import viewBinder._
+  }
 
-    install(new MySubViewModule(myrenderer))
-
+  def configure {
     bindView(html).of[Any] to { self =>
       <html>
         <head>
@@ -66,13 +57,6 @@ class MyViewModule @Inject() (renderer: CustomizableViewRenderer) extends ViewMo
         {render(self).as(body)}
       </html>
     }
-  }
-}
-
-class MySubViewModule(renderer: ViewRenderer) extends ViewModule {
-  def configure(viewBinder: ViewBinder) {
-    import renderer._
-    import viewBinder._
 
     bindView(body).of[String] to { self =>
       <body>
