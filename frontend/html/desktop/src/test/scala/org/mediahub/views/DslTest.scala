@@ -36,43 +36,6 @@ class DslTest {
   }
 }
 
-class ViewInstallModule extends AbstractModule {
-
-  private var modules = Seq.empty[Provider[ViewModule]]
-
-  def listener = new spi.TypeListener {
-    def hear[A](typeLiteral: TypeLiteral[A], encounter: spi.TypeEncounter[A]) {
-      if(classOf[ViewModule].isAssignableFrom(typeLiteral.getRawType)) {
-        // TODO: find a way to avoid type cast here.
-        modules :+= encounter.getProvider(Key.get(typeLiteral)).asInstanceOf[Provider[ViewModule]]
-      }
-    }
-  }
-
-  @Provides
-  @Singleton
-  def renderer(registry: ViewRegistry): ViewRenderer = {
-    new ViewRendererImpl(registry)
-  }
-
-  @Provides
-  @Singleton
-  def binder(registry: ViewRegistry): ViewBinder = {
-    new ViewBinderImpl(registry)
-  }
-
-  def configure {
-    bind(classOf[ViewRegistry]).to(classOf[ViewRegistryImpl]).in(Scopes.SINGLETON)
-    bindListener(matcher.Matchers.any, listener)
-  }
-
-  def configureViews(binder: ViewBinder) {
-    for(module <- modules) {
-      binder.install(module.get)
-    }
-  }
-}
-
 class GuiceModule extends AbstractModule {
 
   def configure {
@@ -84,7 +47,7 @@ object html extends ViewClassifier[NodeSeq]
 object inHead extends ViewClassifier[NodeSeq]
 object body extends ViewClassifier[NodeSeq]
 
-class MyViewModule @Inject() (renderer: ViewRenderer) extends ViewModule {
+class MyViewModule @Inject() (renderer: CustomizableViewRenderer) extends ViewModule {
 
   def configure(viewBinder: ViewBinder) {
     val myrenderer = renderer.withDefaultFor[NodeSeq] { (some, classifier) =>

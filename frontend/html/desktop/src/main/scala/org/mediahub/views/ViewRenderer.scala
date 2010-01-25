@@ -7,7 +7,7 @@ package org.mediahub.views
 
 import scala.reflect.ClassManifest._
 
-class ViewRendererImpl(settings: ViewRendererSettings) extends ViewRenderer {
+class ViewRendererImpl(settings: ViewRendererSettings) extends CustomizableViewRenderer {
   
   def this(registry: ViewRegistry) = this(ViewRendererSettings(registry))
 
@@ -20,13 +20,13 @@ class ViewRendererImpl(settings: ViewRendererSettings) extends ViewRenderer {
   /**
    * create a renderer which uses the given function if no view could be found for a given classifier and the expected result type.
    */
-  def withDefaultFor[A](f: (Any, Classifier[_]) => A)(implicit resultType: ClassManifest[A]): ViewRenderer =
+  def withDefaultFor[A](f: (Any, Classifier[_]) => A)(implicit resultType: ClassManifest[A]): CustomizableViewRenderer =
     new ViewRendererImpl(settings.withDefaultFor(f))
 
   /**
    * create a view renderer which uses the given function to resolve the class from an instance to find view bindings.
    */
-  def withClassResolver(resolver: ClassResolver): ViewRenderer =
+  def withClassResolver(resolver: ClassResolver): CustomizableViewRenderer =
     new ViewRendererImpl(settings.withClassResolver(resolver))
 }
 

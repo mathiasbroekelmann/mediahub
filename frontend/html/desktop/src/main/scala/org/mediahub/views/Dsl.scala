@@ -226,25 +226,28 @@ trait ParamViewBindingBuilder[A, B] {
   def of[C](implicit clazz: ClassManifest[C]): TypedParamViewBindingBuilder[A, B, C]
 }
 
-/**
- * a view renderer resolves is the starting point to render views for bean instances.
- */
 trait ViewRenderer {
 
   /**
    * render a view for a given instance.
    */
   def render(bean: Any): IncludeViewBuilder
+}
+
+/**
+ * a view renderer resolves is the starting point to render views for bean instances.
+ */
+trait CustomizableViewRenderer extends ViewRenderer {
 
   /**
    * create a renderer which uses the given function if no view could be found for a given classifier and the expected result type.
    */
-  def withDefaultFor[A](f: (Any, Classifier[_]) => A)(implicit resultType: ClassManifest[A]): ViewRenderer
+  def withDefaultFor[A](f: (Any, Classifier[_]) => A)(implicit resultType: ClassManifest[A]): CustomizableViewRenderer
 
   /**
    * create a view renderer which uses the given function to resolve the class from an instance to find view bindings.
    */
-  def withClassResolver(resolver: ClassResolver): ViewRenderer
+  def withClassResolver(resolver: ClassResolver): CustomizableViewRenderer
 }
 
 trait ClassResolver {
@@ -309,7 +312,7 @@ object ParamView extends ParamViewClassifier[NodeSeq, MyParam]
 object SimpleStringParamView extends ParamViewClassifier[NodeSeq, String]
 
 // example module which binds some views
-class  MyViewModule(renderer: ViewRenderer) extends ViewModule {
+class  MyViewModule(renderer: CustomizableViewRenderer) extends ViewModule {
 
   def configure(binder: ViewBinder) {
 
