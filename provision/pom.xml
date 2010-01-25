@@ -47,11 +47,6 @@
             <version>1.1.0</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.servicemix.specs</groupId>
-            <artifactId>org.apache.servicemix.specs.jsr311-api-1.1</artifactId>
-            <version>1.4.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.apache.servicemix.bundles</groupId>
             <artifactId>org.apache.servicemix.bundles.wsdl4j</artifactId>
             <version>1.6.1_1</version>
@@ -571,6 +566,12 @@
             <groupId>org.ops4j.pax.web</groupId>
             <artifactId>pax-web-extender-war</artifactId>
             <version>${pax-web.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.sun.jersey.osgi</groupId>
+            <artifactId>jsr311-api</artifactId>
+            <version>1.2-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

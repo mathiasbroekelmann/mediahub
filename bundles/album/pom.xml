@@ -1,42 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns="http://maven.apache.org/POM/4.0.0"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-	<parent>
-		<relativePath>../../poms/compiled/</relativePath>
-		<groupId>org.mediahub.build</groupId>
-		<artifactId>compiled-bundle-settings</artifactId>
-		<version>1.0-SNAPSHOT</version>
-	</parent>
+    <parent>
+        <relativePath>../../poms/compiled/</relativePath>
+        <groupId>org.mediahub.build</groupId>
+        <artifactId>compiled-bundle-settings</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
 
-	<properties>
-		<bundle.symbolicName>org.mediahub.album</bundle.symbolicName>
-		<bundle.namespace>org.mediahub.album</bundle.namespace>
-	</properties>
+    <properties>
+        <bundle.symbolicName>org.mediahub.album</bundle.symbolicName>
+        <bundle.namespace>org.mediahub.album</bundle.namespace>
+    </properties>
 
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.mediahub.bundles</groupId>
-	<artifactId>org.mediahub.album</artifactId>
-	<version>1.0-SNAPSHOT</version>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.mediahub.bundles</groupId>
+    <artifactId>org.mediahub.album</artifactId>
+    <version>1.0-SNAPSHOT</version>
 
-	<name>${bundle.symbolicName}</name>
+    <name>${bundle.symbolicName}</name>
 
-	<packaging>bundle</packaging>
+    <packaging>bundle</packaging>
 
-	<dependencies>
+    <dependencies>
         <dependency>
-            <groupId>org.apache.servicemix.specs</groupId>
-            <artifactId>org.apache.servicemix.specs.jsr311-api-1.1</artifactId>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>jsr311-api</artifactId>
         </dependency>
-		<dependency>
-			<groupId>joda-time</groupId>
-			<artifactId>joda-time</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>org.mediahub.bundles</groupId>
-		    <artifactId>org.mediahub.navigation</artifactId>
-		</dependency>
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mediahub.bundles</groupId>
+            <artifactId>org.mediahub.navigation</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.mediahub.bundles</groupId>
             <artifactId>org.mediahub.page</artifactId>
@@ -59,6 +59,6 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-	</dependencies>
+    </dependencies>
 
 </project>

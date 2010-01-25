@@ -21,7 +21,7 @@
     <module>message</module>
     <module>time</module>
     <module>jmimemagic</module>
-    <module>jackson</module>
+<!--    <module>jackson</module>-->
     <module>album</module>
     <module>page</module>
     <module>media</module>
