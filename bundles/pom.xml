@@ -32,9 +32,9 @@
     <!--    <module>resteasy</module>-->
     <module>jersey-osgi</module>
     <module>web-scopes</module>
-    <module>com.sun.jersey.server</module>
-    <module>com.sun.jersey.core</module>
     <module>web-links</module>
+    <module>views</module>
+    <module>util</module>
   </modules>
 
 </project>

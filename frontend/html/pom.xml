@@ -15,8 +15,6 @@
 
   <packaging>pom</packaging>
 
-  <modules>
-    <module>desktop</module>
-  </modules>
+  <modules />
 
 </project>
