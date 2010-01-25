@@ -18,6 +18,8 @@ object Types {
    */
   def typesOf(clazz: Class[_]): Stream[Class[_]] = {
 
+    val filter = scala.collection.mutable.Set[Class[_]]()
+
     def types(clazzes: List[Class[_]]): Stream[Class[_]] = {
       clazzes.map(of(_)).toStream.flatten
     }
@@ -25,13 +27,17 @@ object Types {
     def interfacesOf(clazz: Class[_]): Stream[Class[_]] = {
 
       val interfaces = clazz.getInterfaces.toList
-      interfaces.toStream.append(types(interfaces))
+      types(interfaces)
     }
 
     def of(clazz: Class[_]): Stream[Class[_]] = {
-      Option(clazz.getSuperclass) match {
-        case Some(superclass) => Stream.cons(clazz, (interfacesOf(clazz) :: of(superclass) :: Nil).toStream.flatten)
-        case None => Stream.cons(clazz, interfacesOf(clazz))
+      if(filter.add(clazz)) {
+        Option(clazz.getSuperclass) match {
+          case Some(superclass) => Stream.cons(clazz, interfacesOf(clazz)).append(of(superclass))
+          case None => Stream.cons(clazz, interfacesOf(clazz))
+        }
+      } else {
+        Stream.Empty
       }
     }
 

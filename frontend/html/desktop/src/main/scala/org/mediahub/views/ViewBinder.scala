@@ -7,6 +7,10 @@ class ViewBinderImpl(registry: ViewRegistry) extends ViewBinder {
 
   def bindView[A, B](classifier: ParamViewClassifier[A, B]): ParamViewBindingBuilder[A, B] =
     new ParamViewBindingBuilderImpl(registry, classifier)
+
+  def install(module: ViewModule) {
+    module.configure(this)
+  }
 }
 
 class ViewBindingBuilderImpl[A](val registry: ViewRegistry, val classifier: Classifier[_]) extends ViewBindingBuilder[A] {

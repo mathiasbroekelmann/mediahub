@@ -23,24 +23,33 @@ import scala.xml._
  * A Classifier for a view.
  */
 
-abstract class Classifier[A](clazz: ClassManifest[A]) {
+abstract case class Classifier[A] {
 
   /**
    * the type of the view result.
    */
-  val resultType = clazz.erasure.asInstanceOf[Class[A]]
+  def resultType: Class[A]
 
   /**
    * determine of the binding is valid for this classifier.
    */
   def isValid(binding: ClassifiedBinding[_]): Boolean = false
+
+  override def equals(obj: Any): Boolean = {
+    obj match {
+      case ref: AnyRef => eq(ref)
+      case _ => false
+    }
+  }
 }
 
 /**
  * Common view classifier. Identifies a view.
  * type A defines the output of the view (String, NodeSeq, ...)
  */
-abstract case class ViewClassifier[A](implicit clazz: ClassManifest[A]) extends Classifier[A](clazz) {
+abstract case class ViewClassifier[A](implicit clazz: ClassManifest[A]) extends Classifier[A] {
+
+  val resultType = clazz.erasure.asInstanceOf[Class[A]]
 
   override def isValid(binding: ClassifiedBinding[_]) = binding match {
     case x: ViewBinding[_, _] => true
@@ -53,7 +62,9 @@ abstract case class ViewClassifier[A](implicit clazz: ClassManifest[A]) extends 
  * type A defines the output of the view (String, NodeSeq, ...)
  * type B defines the view parameters type(s).
  */
-abstract case class ParamViewClassifier[A, B](implicit clazz: ClassManifest[A]) extends Classifier[A](clazz) {
+abstract case class ParamViewClassifier[A, B](implicit clazz: ClassManifest[A]) extends Classifier[A] {
+
+  val resultType = clazz.erasure.asInstanceOf[Class[A]]
 
   override def isValid(binding: ClassifiedBinding[_]) = binding match {
     case x: ParameterViewBinding[_, _, _] => true
@@ -81,6 +92,11 @@ trait ViewBinder {
    * @return a view binding builder to bind the actual view definition optionally receiving the provided parameters.
    */
   def bindView[A, B](classifier: ParamViewClassifier[A, B]): ParamViewBindingBuilder[A, B]
+
+  /**
+   * install the given module as a child module to this binder.
+   */
+  def install(module: ViewModule): Unit
 }
 
 /**
@@ -270,11 +286,8 @@ trait ParamIncludeViewBuilder[A, B] {
 /**
  * the contract for a view module that defines the #render function to include other views.
  */
-trait ViewModule extends ViewBinder with ViewRenderer {
-  /**
-   * start defining an inclusion of a view for a given instance.
-   */
-  def include(bean: AnyRef) = render(bean)
+trait ViewModule {
+  def configure(viewBinder: ViewBinder): Unit
 }
 
 // example code to verify stuff is working
@@ -296,134 +309,141 @@ object ParamView extends ParamViewClassifier[NodeSeq, MyParam]
 object SimpleStringParamView extends ParamViewClassifier[NodeSeq, String]
 
 // example module which binds some views
-trait  MyViewModule extends ViewModule {
+class  MyViewModule(renderer: ViewRenderer) extends ViewModule {
 
-  val defaultRenderer = withDefaultFor[NodeSeq]((bean, classifier) => NodeSeq.Empty)
+  def configure(binder: ViewBinder) {
 
-  // bind a view of Page to the classifier body
-  bindView(Body).of[SomePage] to { page =>
-    <body>
-      <h1>{page.title}</h1>
-      {
-        // variable assignment
-        val pageTeaser = page.teaser
-        // we could also import that property:
-        //import page.{teaser => pageTeaser}
-        // verify a condition
-        if(!pageTeaser.isEmpty) {
-          <ul>
-            {
-              // iteration over content
-              for(teaser <- pageTeaser) yield {
-                <li>
-                  <!-- render a nested view -->
-                  {render(teaser) as Content}
-                </li>
+    val defaultRenderer = renderer.withDefaultFor[NodeSeq]((bean, classifier) => NodeSeq.Empty)
+
+    import defaultRenderer._
+    import binder._
+
+    // bind a view of Page to the classifier body
+    bindView(Body).of[SomePage] to { page =>
+      <body>
+        <h1>{page.title}</h1>
+        {
+          // variable assignment
+          val pageTeaser = page.teaser
+          // we could also import that property:
+          //import page.{teaser => pageTeaser}
+          // verify a condition
+          if(!pageTeaser.isEmpty) {
+            <ul>
+              {
+                // iteration over content
+                for(teaser <- pageTeaser) yield {
+                  <li>
+                    <!-- render a nested view -->
+                    {render(teaser) as Content}
+                  </li>
+                }
               }
-            }
-          </ul>
+            </ul>
+          }
         }
-      }
+        <div>
+          <!-- render a parameterized view -->
+          {render(page) as ParamView withParameter MyParam("foo", page)}
+          {render(page) as SimpleStringParamView withParameter "foobar"}
+          <!-- this will not pass the compiler since "bar" is not of type Content: -->
+          <!-- {render(page) as ParamView withParameter MyParam("foo", "bar")} -->
+        </div>
+      </body>
+    }
+
+    /**
+     * just a plain view binding
+     */
+    bindView(Content).of[SomePage] to { page =>
       <div>
-        <!-- render a parameterized view -->
-        {render(page) as ParamView withParameter MyParam("foo", page)}
-        {render(page) as SimpleStringParamView withParameter "foobar"}
-        <!-- this will not pass the compiler since "bar" is not of type Content: -->
-        <!-- {render(page) as ParamView withParameter MyParam("foo", "bar")} -->
+        <div>{page.title}</div>
       </div>
-    </body>
-  }
+    }
 
-  /**
-   * just a plain view binding
-   */
-  bindView(Content).of[SomePage] to { page =>
-    <div>
-      <div>{page.title}</div>
-    </div>
-  }
+    /**
+     * just a plain view binding with parent wrapping
+     */
+    bindView(Content).of[SomePage] withParentTo { (page, parent) =>
+      <div>
+        <h1>{page.title}</h1>
+        <!-- include the parent view (it's like calling super#Content(page) -->
+        {parent.render(page)}
+      </div>
+    }
 
-  /**
-   * just a plain view binding with parent wrapping
-   */
-  bindView(Content).of[SomePage] withParentTo { (page, parent) =>
-    <div>
-      <h1>{page.title}</h1>
-      <!-- include the parent view (it's like calling super#Content(page) -->
-      {parent.render(page)}
-    </div>
-  }
+    /**
+     * example for a view binding which provides additional parameters
+     * param is of type (String, Content)
+     */
+    bindView(ParamView).of[SomePage] to { (page, param) =>
+      // we can import the param functions
+      import param._
+      // and use the parameters in the view
+      Text(someString)
+    }
 
-  /**
-   * example for a view binding which provides additional parameters
-   * param is of type (String, Content)
-   */
-  bindView(ParamView).of[SomePage] to { (page, param) =>
-    // we can import the param functions
-    import param._
-    // and use the parameters in the view
-    Text(someString)
-  }
+    /**
+     * Now the same with a parent
+     */
+    bindView(ParamView).of[SomePage] withParentTo { (page, param, parent) =>
+      <div>
+        <h1>{param.someString}</h1>
+        <!-- call parent - we can modify the parameter and of course the value of page as long as the types doesn't change -->
+        {parent.render(page, MyParam("newvalue", page))}
+      </div>
 
-  /**
-   * Now the same with a parent
-   */
-  bindView(ParamView).of[SomePage] withParentTo { (page, param, parent) =>
-    <div>
-      <h1>{param.someString}</h1>
-      <!-- call parent - we can modify the parameter and of course the value of page as long as the types doesn't change -->
-      {parent.render(page, MyParam("newvalue", page))}
-    </div>
-    
-  }
+    }
 
-  /**
-   * It is also possible to bind a view to a parameterized view which ignores the given parameters.
-   * This simplifies the view definitions where the view doesn't need the parameters.
-   */
-  bindView(ParamView).of[SomePage] to { page =>
-    NodeSeq.Empty
-  }
+    /**
+     * It is also possible to bind a view to a parameterized view which ignores the given parameters.
+     * This simplifies the view definitions where the view doesn't need the parameters.
+     */
+    bindView(ParamView).of[SomePage] to { page =>
+      NodeSeq.Empty
+    }
 
-  /**
-   * and now with calling the super view
-   */
-  bindView(ParamView).of[SomePage] withParentTo { (page, parent) =>
-    <div class="foo">
-      {parent.render(page)}
-    </div>
-  }
+    /**
+     * and now with calling the super view
+     */
+    bindView(ParamView).of[SomePage] withParentTo { (page, parent) =>
+      <div class="foo">
+        {parent.render(page)}
+      </div>
+    }
 
-  bindView(SimpleStringParamView).of[SomePage] to { (page, strParam) =>
-    NodeSeq.Empty
-  }
+    bindView(SimpleStringParamView).of[SomePage] to { (page, strParam) =>
+      NodeSeq.Empty
+    }
 
-  /**
-   * It is also possible to bind a view to a parameterized view which ignores the given parameters.
-   * This simplifies the view definitions where the view doesn't need the parameters.
-   */
-  bindView(ParamView).of[SomePage] to { page =>
-    NodeSeq.Empty
-  }
+    /**
+     * It is also possible to bind a view to a parameterized view which ignores the given parameters.
+     * This simplifies the view definitions where the view doesn't need the parameters.
+     */
+    bindView(ParamView).of[SomePage] to { page =>
+      NodeSeq.Empty
+    }
 
-  /**
-   * It is also possible to bind a view to a parameterized view which ignores the given parameters.
-   * This simplifies the view definitions where the view doesn't need the parameters.
-   */
-  bindView(ParamView).of[SomePage] to { (page, param) =>
-    NodeSeq.Empty
-  }
+    /**
+     * It is also possible to bind a view to a parameterized view which ignores the given parameters.
+     * This simplifies the view definitions where the view doesn't need the parameters.
+     */
+    bindView(ParamView).of[SomePage] to { (page, param) =>
+      NodeSeq.Empty
+    }
 
-  /**
-   * and now with calling the super view
-   */
-  bindView(ParamView).of[SomePage] withParentTo { (page: SomePage, parent: ViewChain[SomePage, NodeSeq]) =>
-    <div class="foo">
-      {parent.render(page)}
-    </div>
-  }
+    /**
+     * and now with calling the super view
+     */
+    bindView(ParamView).of[SomePage] withParentTo { (page: SomePage, parent: ViewChain[SomePage, NodeSeq]) =>
+      <div class="foo">
+        {parent.render(page)}
+      </div>
+    }
 
-  bindView(SimpleStringParamView).of[SomePage] to { (page: SomePage, strParam: String) =>
-    NodeSeq.Empty
+    bindView(SimpleStringParamView).of[SomePage] to { (page: SomePage, strParam: String) =>
+      NodeSeq.Empty
+    }
+
   }
 }

@@ -88,13 +88,17 @@ class IncludeViewBuilderImpl[A](settings: ViewRendererSettings, bean: A) extends
      */
     def chain(views: Seq[ViewBinding[A, B]]): ViewChain[A, B] = new ViewChain[A, B] {
       def render(some: A): B = {
-        views.headOption
-              // render the first found view
-             .map(_.render(some, chain(views.tail)))
-              // or if that is not found render the fallback for the expected result type
-             .orElse(settings.renderDefault(some, classifier, classifier.resultType))
-              // of that is also not possible raise an error
-             .getOrElse(error(format("Could not resolve view %s for %s of type %s", classifier, bean, classifier.resultType)))
+        val result = views.headOption.map { view =>
+            // render the first found view
+            view.render(some, chain(views.tail))
+          }.orElse {
+            // or if that is not found render the fallback for the expected result type
+            settings.renderDefault(some, classifier, classifier.resultType)
+          }.getOrElse {
+            // of that is also not possible raise an error
+            error(format("Could not resolve view %s for %s of type %s", classifier, bean, classifier.resultType))
+          }
+        result
       }
     }
 
