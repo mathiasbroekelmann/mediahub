@@ -30,7 +30,6 @@
     <!--    <module>org.dynamicjava.jpa</module>-->
     <module>web</module>
     <!--    <module>resteasy</module>-->
-    <module>jersey-osgi</module>
     <module>web-scopes</module>
     <module>web-links</module>
     <module>views</module>
