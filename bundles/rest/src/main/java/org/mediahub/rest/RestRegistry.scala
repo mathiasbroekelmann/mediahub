@@ -22,7 +22,7 @@ trait RestRegistry {
   /**
    * register a provider or root resource class. The class will be managed by the container.
    */
-  def register[A<:AnyRef](implicit clazz: ClassManifest[A]): Unit
+  def register[A<:AnyRef](implicit clazz: ClassManifest[A])
 
   /**
    * register a set of jsr311 classes.
@@ -32,7 +32,7 @@ trait RestRegistry {
   /**
    * register a provider or root resource class by defining a provider instance which is used to get an instance of it.
    */
-  def register[A<:AnyRef](provider: Provider[A])(implicit clazz: ClassManifest[A]): Unit
+  def register[A<:AnyRef](provider: Provider[A])(implicit clazz: ClassManifest[A])
 
   /**
    * register singletons.
