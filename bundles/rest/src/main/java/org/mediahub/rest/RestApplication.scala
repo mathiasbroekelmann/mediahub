@@ -18,10 +18,21 @@ import javax.ws.rs.core.Application
 
 import org.osgi.framework._
 
-class RestApplicationRegistration(bundleContext: BundleContext) {
+trait ApplicationRegistry {
+  def register(app: Application): Registration
+}
 
-  case class Added(registrar: AnyRef)
-  case class Removed(registrar: AnyRef)
+trait Registration {
+  def unregister
+}
+
+case class Added(registrar: AnyRef)
+case class Removed(registrar: AnyRef)
+
+class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
+
+  assert(appRegistry != null)
+
   case class Update(registrars: Seq[_])
   case class Publish(application: Application)
 
@@ -33,12 +44,16 @@ class RestApplicationRegistration(bundleContext: BundleContext) {
     var registrars = Seq.empty[AnyRef]
 
     def add(registrar: AnyRef) {
+      println("registar added: " + registrar)
       registrars :+= registrar
+      println("registars: " + registrars.size)
       update
     }
 
     def remove(registrar: AnyRef) {
+      println("registar removed: " + registrar)
       registrars = registrars.filter(_ != registrar)
+      println("registars: " + registrars.size)
       update
     }
 
@@ -47,7 +62,7 @@ class RestApplicationRegistration(bundleContext: BundleContext) {
     }
 
     loop {
-      react {
+      receive {
         case Added(registrar) => add(registrar)
         case Removed(registrar) => remove(registrar)
       }
@@ -57,19 +72,20 @@ class RestApplicationRegistration(bundleContext: BundleContext) {
   /**
    * the updater actually manages the rest application by registering services from all provided registrars.
    */
-  val updater = actor {
+  private val updater = actor {
     loop {
-      react {
+      receive {
         case Update(registrars) => {
             // wait some time to see if there are more update events comming in
             // TODO: find a good value for sleep time.
-            Thread.sleep(1000)
+            println("mailboxSize before sleep: " + mailboxSize)
+            Thread.sleep(500)
+            println("mailboxSize after sleep: " + mailboxSize)
             if(mailboxSize == 0) {
               // no more updates in the last 2 seconds so we can run the update process
               update(registrars)
             }
         }
-        case _ => error("only update events can be processed")
       }
     }
 
@@ -98,21 +114,28 @@ class RestApplicationRegistration(bundleContext: BundleContext) {
     }
   }
 
-  val publisher = actor {
+  /**
+   * the publisher register the application in the bundle context
+   */
+  private val publisher = actor {
 
-    var applicationRegistration: Option[ServiceRegistration] = None
+    var registration: Option[Registration] = None
 
     loop {
       react {
         // TODO: remove any published application and publish the new application
         case Publish(app) => {
-            for (reg <- applicationRegistration) reg.unregister
+            for (reg <- registration) reg.unregister
+            registration = Some(appRegistry.register(app))
         }
       }
     }
   }
 
-  def registry = new RestRegistry {
+  /**
+   * the registry is used to collect the application service and classes stuff.
+   */
+  private def registry = new RestRegistry {
 
     var classes = Seq.empty[Class[_]]
     var providers = Map.empty[Class[_], Provider[_]]
