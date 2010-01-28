@@ -50,6 +50,7 @@
                     <provision>
                         <param>--platform=equinox</param>
                         <param>--vmOptions=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005</param>
+                        <param>--bootDelegation=sun.misc.*</param>
                     </provision>
                 </configuration>
             </plugin>
