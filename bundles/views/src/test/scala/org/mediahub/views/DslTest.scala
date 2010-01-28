@@ -9,8 +9,9 @@ import org.junit._
 import Assert._
 import org.hamcrest.CoreMatchers._
 
-import scala.xml.NodeSeq
 import com.google.inject._
+
+import scala.xml.NodeSeq
 
 class DslTest {
   
@@ -49,12 +50,12 @@ class MyViewModule extends AbstractViewModule {
   }
 
   def configure {
-    bindView(html).of[Any] to { self =>
+    bindView(html).of[Any] to { any =>
       <html>
         <head>
-           {render(self).as(inHead)}
+           {render(any).as(inHead)}
         </head>
-        {render(self).as(body)}
+        {render(any).as(body)}
       </html>
     }
 
