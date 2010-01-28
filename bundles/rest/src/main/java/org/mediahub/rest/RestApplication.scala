@@ -44,16 +44,12 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
     var registrars = Seq.empty[AnyRef]
 
     def add(registrar: AnyRef) {
-      println("registar added: " + registrar)
       registrars :+= registrar
-      println("registars: " + registrars.size)
       update
     }
 
     def remove(registrar: AnyRef) {
-      println("registar removed: " + registrar)
       registrars = registrars.filter(_ != registrar)
-      println("registars: " + registrars.size)
       update
     }
 
@@ -76,15 +72,13 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
     loop {
       receive {
         case Update(registrars) => {
-            // wait some time to see if there are more update events comming in
-            // TODO: find a good value for sleep time.
-            println("mailboxSize before sleep: " + mailboxSize)
-            Thread.sleep(500)
-            println("mailboxSize after sleep: " + mailboxSize)
+            // check the mail box size and only update registrars if no more elements are in the queue
             if(mailboxSize == 0) {
-              // no more updates in the last 2 seconds so we can run the update process
               update(registrars)
             }
+            // wait some time to see if there are more update events comming in
+            // TODO: find a good value for sleep time.
+            Thread.sleep(500)
         }
       }
     }
@@ -106,8 +100,8 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
         override val alias = Some("/")
         override val provider = new ProviderFactory {
           def apply[A](clazz: Class[A]) = reg.providers
-                                                     .get(clazz)
-                                                     .map(_.asInstanceOf[Provider[A]])
+                                             .get(clazz)
+                                             .map(_.asInstanceOf[Provider[A]])
         }
       }
       publisher ! Publish(app)
