@@ -3,11 +3,13 @@
  * and open the template in the editor.
  */
 
-package org.mediahub.rest
+package org.mediahub.rest.internal
 
 import org.restmodules._
 import org.restmodules.ioc._
 import org.restmodules.filter._
+
+import org.mediahub.rest._
 
 import scala.collection.JavaConversions._
 
@@ -61,6 +63,7 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
       receive {
         case Added(registrar) => add(registrar)
         case Removed(registrar) => remove(registrar)
+        case _ =>
       }
     }
   }
@@ -80,6 +83,7 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
             // TODO: find a good value for sleep time.
             Thread.sleep(500)
         }
+        case _ =>
       }
     }
 
@@ -122,6 +126,7 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
             for (reg <- registration) reg.unregister
             registration = Some(appRegistry.register(app))
         }
+        case _ =>
       }
     }
   }

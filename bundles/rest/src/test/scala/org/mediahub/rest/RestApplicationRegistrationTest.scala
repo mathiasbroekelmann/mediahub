@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package org.mediahub.rest
+package org.mediahub.rest.internal
 
 import org.junit._
 import Assert._
@@ -13,6 +13,8 @@ import org.hamcrest.CoreMatchers._
 import javax.ws.rs.core.Application
 import javax.ws.rs._
 import javax.ws.rs.ext._
+
+import org.mediahub.rest._
 
 import scala.collection.JavaConversions._
 
@@ -36,7 +38,7 @@ class RestApplicationRegistrationTest {
   var someProvider: SomeProvider = _
 
   @Before
-  def setUp: Unit = {
+  def setUp {
     registerCalled = 0
     unregisterCalled = 0
     someProvider = new SomeProvider
@@ -56,6 +58,10 @@ class RestApplicationRegistrationTest {
     restAppReg = new RestApplicationRegistration(appregistry)
   }
 
+  @After
+  def tearDown {
+  }
+
   @Test
   def spike = {
     val myregistrar = registrar
@@ -63,7 +69,7 @@ class RestApplicationRegistrationTest {
     assertThat(registerCalled, is(0))
     restAppReg.collector ! Added(registrar2)
     assertThat(registerCalled, is(0))
-    Thread.sleep(2000)
+    Thread.sleep(1000)
     assertThat(registerCalled, is(1))
     assertThat(registeredApp, not(nullValue[Application]))
     val rootResourceClass = registeredApp.getClasses.find(_ == classOf[RootResource])
