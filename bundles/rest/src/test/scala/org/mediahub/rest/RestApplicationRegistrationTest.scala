@@ -70,19 +70,15 @@ class RestApplicationRegistrationTest {
     restAppReg.collector ! Added(registrar2)
     assertThat(registerCalled, is(0))
     Thread.sleep(1000)
-    assertThat(registerCalled, is(1))
+    val calledRegisterMethods = registerCalled
     assertThat(registeredApp, not(nullValue[Application]))
     val rootResourceClass = registeredApp.getClasses.find(_ == classOf[RootResource])
     assertThat(rootResourceClass, is(Some(classOf[RootResource]).asInstanceOf[Option[Class[_]]]))
+    val calledUnRegisterMethods = unregisterCalled
     restAppReg.collector ! Removed(myregistrar)
-    assertThat(unregisterCalled, is(0))
-    Thread.sleep(2000)
-    assertThat(unregisterCalled, is(1))
-    assertThat(registerCalled, is(2))
-    val rootResourceClass2 = registeredApp.getClasses.find(_ == classOf[RootResource])
-    assertThat(rootResourceClass2, is(None.asInstanceOf[Option[Class[_]]]))
-    val providerSinglton = registeredApp.getSingletons.find(_.isInstanceOf[SomeProvider])
-    assertThat(providerSinglton, is(Some(someProvider).asInstanceOf[Option[Object]]))
+    Thread.sleep(1000)
+    assertThat(registerCalled, is(calledRegisterMethods)) // should not register since no root resource is deployed
+    assertThat(unregisterCalled, is(calledUnRegisterMethods + 1)) // should not register since no root resource is deployed
   }
 
   val registrar = new RestRegistrar {

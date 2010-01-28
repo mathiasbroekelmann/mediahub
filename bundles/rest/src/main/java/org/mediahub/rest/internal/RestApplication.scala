@@ -17,6 +17,7 @@ import scala.actors.Actor._
 import scala.actors.Actor
 
 import javax.ws.rs.core.Application
+import javax.ws.rs.Path
 
 import org.osgi.framework._
 
@@ -37,6 +38,7 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
 
   case class Update(registrars: Seq[_])
   case class Publish(application: Application)
+  case class Unpublish
 
   /**
    * get all add/remove events and notifies the updater
@@ -108,7 +110,21 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
                                              .map(_.asInstanceOf[Provider[A]])
         }
       }
-      publisher ! Publish(app)
+      if(hasRootResource(app)) {
+        publisher ! Publish(app)
+      } else {
+        publisher ! Unpublish
+      }
+    }
+
+    def hasRootResource(app: Application) = {
+
+      def hasPathAnnotation(clazz: Class[_]) = clazz.getAnnotation(classOf[Path]) != null
+
+      val rootResourceInClasses = app.getClasses.find(hasPathAnnotation(_))
+      val rootResourceInSingletons = app.getSingletons.find(s => hasPathAnnotation(s.getClass))
+
+      rootResourceInClasses.isDefined || rootResourceInSingletons.isDefined
     }
   }
 
@@ -118,13 +134,17 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
   private val publisher = actor {
 
     var registration: Option[Registration] = None
-
+    
     loop {
       react {
         // TODO: remove any published application and publish the new application
         case Publish(app) => {
             for (reg <- registration) reg.unregister
             registration = Some(appRegistry.register(app))
+        }
+        case Unpublish => {
+            for (reg <- registration) reg.unregister
+            registration = None
         }
         case _ =>
       }
