@@ -55,10 +55,11 @@
             </plugin>
         </plugins>
         <extensions>
+            <!-- Enabling the use of FTP -->
             <extension>
-                <groupId>org.jvnet.wagon-svn</groupId>
-                <artifactId>wagon-svn</artifactId>
-                <version>1.9</version>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ftp</artifactId>
+                <version>1.0-beta-6</version>
             </extension>
         </extensions>
     </build>
@@ -66,8 +67,8 @@
     <repositories>
         <repository>
             <id>mediahub.repository</id>
-            <name>mediahub snapshot repository</name>
-            <url>https://svn.kenai.com/svn/mediahub~maven-repository/snapshots</url>
+            <name>mediahub repository</name>
+            <url>http://mediahub.xtreemhost.com/snapshots</url>
             <releases>
                 <enabled>false</enabled>
             </releases>
@@ -193,15 +194,15 @@
     <distributionManagement>
         <repository>
             <uniqueVersion>false</uniqueVersion>
-            <id>mediahub.repository</id>
+            <id>ftp.xtreemhost.com</id>
             <name>mediahub maven repository</name>
-            <url>svn:https://svn.kenai.com/svn/mediahub~maven-repository/releases</url>
+            <url>ftp://ftp.xtreemhost.com/htdocs/releases/</url>
         </repository>
         <snapshotRepository>
             <uniqueVersion>false</uniqueVersion>
-            <id>mediahub.repository</id>
+            <id>ftp.xtreemhost.com</id>
             <name>mediahub maven repository</name>
-            <url>svn:https://svn.kenai.com/svn/mediahub~maven-repository/snapshots</url>
+            <url>ftp://ftp.xtreemhost.com/htdocs/snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 
