@@ -35,16 +35,36 @@ class ViewRegistryImpl extends ViewRegistry {
     foundBindings.toSeq
   }
 
+  case class Added(binding: ClassifiedBinding[_])
+  case class Removed(binding: ClassifiedBinding[_])
+
+  private val registrar = actor {
+    loop {
+      react {
+        case Added(binding) => add(binding)
+        case Removed(binding) => remove(binding)
+      }
+    }
+
+    def add(binding: ClassifiedBinding[_]) {
+      bindings += binding
+      classifiedBindings = Map.empty
+    }
+
+    def remove(binding: ClassifiedBinding[_]) {
+      bindings -= binding
+      classifiedBindings = Map.empty
+    }
+  }
+
   /**
    * register a view binding.
    */
   def register[A](binding: ClassifiedBinding[A]): ViewBindingRegistration = {
+    registrar ! Added(binding)
     new ViewBindingRegistration {
-      bindings += binding
-      classifiedBindings = Map.empty
       def unregister {
-        bindings -= binding
-        classifiedBindings = Map.empty
+        registrar ! Removed(binding)
       }
     }
   }
