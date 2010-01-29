@@ -48,9 +48,9 @@
                 <version>1.4</version>
                 <configuration>
                     <provision>
-                        <param>--platform=equinox</param>
-                        <param>--vmOptions=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005</param>
+                        <param>--platform=felix</param>
                         <param>--bootDelegation=sun.misc.*</param>
+                        <param>--vmOptions=-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=5005</param>
                     </provision>
                 </configuration>
             </plugin>
