@@ -18,6 +18,16 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.restmodules</groupId>
+            <artifactId>restmodules-core</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.restmodules</groupId>
+            <artifactId>restmodules-jersey</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.compendium</artifactId>
         </dependency>
