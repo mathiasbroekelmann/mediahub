@@ -1,6 +1,5 @@
 /*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
+ * TODO: implement an osgi activator which tracks LinkResolvers and export a link renderer service
  */
 
 package org.mediahub.web.links
@@ -15,35 +14,55 @@ import scala.reflect.ClassManifest._
 
 import java.lang.reflect.{ParameterizedType}
 
-class Links(implicit val context: LinkContext) {
+/**
+ * a link renderer provides entry methods to render links.
+ */
+trait LinkRenderer {
 
-  def linkTo[A<:AnyRef](clazz: java.lang.Class[A]): ResourceActionLinkBuilder[A] =
-    linkTo[A](fromClass(clazz))
+  /**
+   * start building a link to a resource type.
+   *
+   * @param [A] the resource type.
+   */
+  def linkTo[A<:AnyRef](implicit clazz: ClassManifest[A]): ResourceActionLinkBuilder[A]
 
-  def linkTo[A<:AnyRef](target: A)(clazz: java.lang.Class[A]): ResourceActionLinkBuilder[A] = {
-    new ResourceLinkBuilderImpl(context).resolvedBy[A](fromClass(clazz))
+  /**
+   * start building a link to a resource type identified by a class.
+   */
+  def linkTo[A<:AnyRef](clazz: java.lang.Class[A]): ResourceActionLinkBuilder[A] = linkTo[A](fromClass(clazz))
+
+  /**
+   * start building a link to a resource instance.
+   *
+   * @param target the target instance for the link.
+   */
+  def linkTo[A<:AnyRef](target: A): ResourceActionLinkBuilder[A]
+}
+
+/**
+ * companion object to transform the build links.
+ */
+object LinkRenderer {
+
+  /**
+   * make a string from a link builder.
+   */
+  implicit def linkBuilderToString(builder: LinkBuilder): String = {
+    builder.build.map(x =>
+      x.toString).getOrElse(error("not a valid link spec: " + builder))
   }
+}
+
+/**
+ * link renderer implementation which uses a link context to resolve the base uri and the internal link resolvers.
+ */
+class ContextLinkRenderer(context: LinkContext) extends LinkRenderer {
 
   def linkTo[A<:AnyRef](implicit clazz: ClassManifest[A]): ResourceActionLinkBuilder[A] =
     new ResourceLinkBuilderImpl(context).resolvedBy[A]
 
-  def linkTo[A<:AnyRef](target: A)(implicit clazz: ClassManifest[A]): ResourceActionLinkBuilder[A] = {
+  def linkTo[A<:AnyRef](target: A): ResourceActionLinkBuilder[A] = {
     new ResourceLinkBuilderImpl(context).resolvedBy[A](target)
-  }
-}
-
-object Links {
-
-  def linkTo[A<:AnyRef](implicit clazz: ClassManifest[A], context: LinkContext): ResourceActionLinkBuilder[A] =
-    new Links().linkTo[A]
-
-  def linkTo[A<:AnyRef](target: A)(implicit clazz: ClassManifest[A], context: LinkContext): ResourceActionLinkBuilder[A] = {
-    new Links().linkTo[A](target)
-  }
-
-  implicit def linkBuilderToString(builder: LinkBuilder): String = {
-    builder.build.map(x =>
-      x.toString).getOrElse(error("not a valid link spec: " + builder))
   }
 }
 
@@ -60,13 +79,13 @@ trait LinkContext {
   /**
    * Provide the list of all available link resolvers.
    */
-  def resolver: Seq[LinkResolver[_]] = Seq.empty
+  def resolver: Iterable[LinkResolver[_]] = Iterable.empty
 
   /**
    * Get all link resolvers that can handle the defined class type.
    * TODO: find a way to order the resolvers.
    */
-  def resolverFor[A<:AnyRef](implicit clazz: ClassManifest[A]): Seq[LinkResolver[A]] = {
+  def resolverFor[A<:AnyRef](implicit clazz: ClassManifest[A]): Iterable[LinkResolver[A]] = {
     val myclass = clazz.erasure
     LinkContext.typeOf(resolver, classOf[LinkResolver[A]], myclass)
   }
@@ -90,7 +109,7 @@ object LinkContext {
    * implementations for certain type definitions of that generic types.
    * you can filter that list for specific types to collect the services whose generic type definitions passes the given matcher.
    */
-  def typeOf[A<:AnyRef,B<:A](input: Seq[A], clazz: Class[B], genericType: Class[_]): Seq[B] = {
+  def typeOf[A<:AnyRef,B<:A](input: Iterable[A], clazz: Class[B], genericType: Class[_]): Iterable[B] = {
     for(element <- input;
         if element.isInstanceOf[B];
         itf <- element.asInstanceOf[B].getClass.getGenericInterfaces;
@@ -211,12 +230,12 @@ trait ResourceActionLinkBuilder[A] extends ResourceLinkBuilder {
    * Use null for any @Context annotated or other uri unrelated parameters.
    * It is also possible to pass null for uri related parameters that have a given default value.
    */
-  def action(call: (A => Any)): ResourceLinkBuilder
+  //def action(call: (A => Any)): ResourceLinkBuilder
   
   /**
    * define a method which with a @Path annotation to build the link
    */
-  def action(methodName: String): ResourceLinkBuilder
+  def action(methodName: String): ResourceLinkBuilder = action(methodName, Map.empty[String, AnyRef])
 
   def action(methodName: String, params: Map[String, AnyRef]): ResourceLinkBuilder
 
@@ -244,7 +263,7 @@ trait ResourceLinkBuilder extends FragmentLinkBuilder {
   /**
    * specify the resource instance which is capable to resolve the resource.
    */
-  def resolvedBy[A<:AnyRef](target: A)(implicit clazz: ClassManifest[A]): ResourceActionLinkBuilder[A]
+  def resolvedBy[A<:AnyRef](target: A): ResourceActionLinkBuilder[A]
 }
 
 class FragmentLinkBuilderImpl[A](builders: Seq[UriPartBuilder]) extends LinkBuilderImpl(builders)
@@ -268,15 +287,6 @@ class ResourceActionLinkBuilderImpl[A](context: LinkContext,
   def action(call: (A => Any)): ResourceLinkBuilder = {
     // TODO: implement proxy based method invokation to action call
     error("not yet implemented")
-  }
-
-  def action(methodName: String): ResourceLinkBuilder = {
-    def path = new UriPartBuilder {
-      def apply(uriBuilder: Option[UriBuilder], chain: UriBuilderChain): Option[URI] = {
-        chain(uriBuilder.map(_.path(clazz, methodName)))
-      }
-    }
-    new ResourceLinkBuilderImpl(context, builders :+ path)
   }
 
   def action(methodName: String, params: Map[String, AnyRef]): ResourceLinkBuilder = {
@@ -342,13 +352,14 @@ class ResourceLinkBuilderImpl(context: LinkContext,
     }
   }
 
-  def resolvedBy[A<:AnyRef](target: A)(implicit clazz: ClassManifest[A]): ResourceActionLinkBuilder[A] = {
-    if(Option(target.getClass.getAnnotation(classOf[Path])).map(_ => true).getOrElse(false)) {
-      resolvedBy[A]
+  def resolvedBy[A<:AnyRef](target: A): ResourceActionLinkBuilder[A] = {
+    val clazz = target.getClass.asInstanceOf[Class[A]]
+    if(Option(clazz.getAnnotation(classOf[Path])).map(_ => true).getOrElse(false)) {
+      resolvedBy(fromClass(clazz))
     } else {
       new ResourceActionLinkBuilderImpl[A](context,
                                            builders :+ instanceBuilder(target),
-                                           clazz.erasure.asInstanceOf[Class[A]])
+                                           clazz)
     }
   }
 
@@ -366,8 +377,12 @@ class ResourceLinkBuilderImpl(context: LinkContext,
           resolvedLinkBuilder.build.flatMap(uri => chain(Some(UriBuilder.fromUri(uri))))
         }
         // if a uri builder is defined the caller already defined how the sub resource is resolved
-        // otherwise use the fallback which itself uses the defined sequece of link resolvers
-        builder.flatMap(defined => chain(Some(defined))).orElse(fallback)
+        // otherwise use the fallback which itself uses the defined sequence of link resolvers
+        builder.flatMap { defined =>
+          chain(Some(defined))
+        }.orElse {
+          fallback
+        }
       }
     }
   }
