@@ -35,6 +35,7 @@
     <module>views</module>
     <module>util</module>
     <module>rest</module>
+    <module>cache</module>
   </modules>
 
 </project>
