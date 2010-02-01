@@ -24,6 +24,16 @@ trait Cache {
    * Invalidate all cache keys whose values share the given dependency.
    */
   def invalidate(dependency: Dependency)
+
+  /**
+   * evict the given key and its value from the cache.
+   */
+  def evict[A](key: CacheKey[A])
+
+  /**
+   * enumerate all cache keys in the cache.
+   */
+  def enumerate[A](f: CacheKey[_] => A): Seq[A]
 }
 
 /**
@@ -140,7 +150,7 @@ trait CacheListener {
    * @param key the cache key
    * @param value the cached value
    */
-  def hit[A](key: CacheKey[A], value: A) {}
+  def hit[A](key: CacheKey[A]) {}
 
   /**
    * Notify the listener about a miss on the cache
@@ -159,23 +169,34 @@ trait CacheListener {
    * 
    * @param key the cache key
    * @param value the cached value
-   * @param time the time needed to compute the value. This value can be used to optimize the values stored in the cache
-   * @param control allows controlling the cache like flushing cache keys if needed.
+   * @param dependencies the dependencies of the computed value
+   * @param time the time needed to compute the value.
    */
-  def push[A](key: CacheKey[A], value: A, time: Int, control: CacheControl) {}
+  def push[A](key: CacheKey[A], value: A, dependencies: Iterable[Dependency], time: Long) {}
+
+  /**
+   * Notify the listener about a dependency invalidation.
+   *
+   * @param dependency the dependency that was invalidated
+   */
+  def invalidated(dependency: Dependency) {}
 }
 
 /**
- * Allows modifiying the cache state.
+ * a factory which creates a cache listener for a given cache
  */
-trait CacheControl {
+trait CacheListenerFactory {
 
   /**
-   * evict the given key and its value from the cache.
+   * Create the cache listener instance for the given cache.
+   * Any returned listener will be added to the cache.
+   *
+   * @param cache the cache to create the listener for
+   *
+   * @return Some(listener) if the factory creates a listener, otherwise None
    */
-  def evict[A](key: CacheKey[A])
+  def create(cache: Cache): Option[CacheListener]
 }
-
 
 import scala.actors.Actor
 import Actor._
@@ -187,19 +208,23 @@ private[cache] class CacheImpl extends Cache {
      * computes the value and pushes the result into the cache.
      */
     def computeAndPush: A = {
+      def compute = {
+        val start = System.currentTimeMillis
+        (key.compute, System.currentTimeMillis - start)
+      }
       val cc = new ComputationContextImpl()
-      val value = Cache.withContext(cc)(key.compute)
-      cache ! Push(key, cc.dependencies, value)
+      val (value, time) = Cache.withContext(cc)(compute)
+      cache ! Push(key, cc.dependencies, time, value)
       value
     }
 
     cache ! Lookup(key, self)    
     val result = self.receive {
-      case Found(value) => {
+      case Hit(value) => {
         def found: A = value.asInstanceOf[A]
         found _
       }
-      case NotFound => computeAndPush _
+      case Miss => computeAndPush _
     }
     // we need to execute the result outside of the blocking receive to avoid
     // dead locks while computing the value
@@ -210,6 +235,27 @@ private[cache] class CacheImpl extends Cache {
     cache ! Invalidated(dependency)
   }
 
+  def evict[A](key: CacheKey[A]) {
+    cache ! Evict(key)
+  }
+
+  def enumerate[A](f: CacheKey[_] => A): Seq[A] = {
+    cache ! Enumerate(self)
+    val keys = self.receive {
+      case CacheKeys(keys) => keys
+      case other => error(self + " has received unexpected message of " + other)
+    }
+    for(key <- keys) yield f(key)
+  }
+
+  def addListener(listener: CacheListener) {
+    cache ! AddListener(listener)
+  }
+
+  def removeListener(listener: CacheListener) {
+    cache ! RemoveListener(listener)
+  }
+
   /**
    * lookup cache keys
    */
@@ -218,45 +264,79 @@ private[cache] class CacheImpl extends Cache {
   /**
    * respond that a given cache key was found in the cache
    */
-  case class Found[A](value: A)
+  case class Hit[A](value: A)
 
   /**
    * respond that a given cache key was not found in the cache
-   * Use the provided computation context to compute the value
    */
-  case class NotFound(cc: ComputationContext)
+  case class Miss
 
   /**
    * push a computed value into the cache.
    */
-  case class Push[A](key: CacheKey[A], dependencies: Iterable[Dependency], value: A)
+  case class Push[A](key: CacheKey[A], dependencies: Iterable[Dependency], computationTime: Long, value: A)
 
   /**
    * notify about invalidated dependency
    */
   case class Invalidated(dependency: Dependency)
 
+  /**
+   * notify the cache to evict any value for the given cache key.
+   */
+  case class Evict[A](key: CacheKey[A])
+
+  /**
+   * notify the cache to enumerate all current cache keys.
+   */
+  case class Enumerate(receiver: Actor)
+
+  /**
+   * response upon Enumerate.
+   */
+  case class CacheKeys(keys: Seq[CacheKey[_]])
+
+  case class AddListener(listener: CacheListener)
+
+  case class RemoveListener(listener: CacheListener)
+
   private val cache: Actor = actor {
     var cachedValues = Map.empty[CacheKey[_], (Iterable[Dependency], Any)]
+    var listeners = Set.empty[CacheListener]
 
     loop {
       react {
         case Lookup(key, receiver) => lookup(key, receiver)
-        case Push(key, dependencies, value) => push(key, dependencies, value)
+        case Push(key, dependencies, time, value) => push(key, dependencies, time, value)
         case Invalidated(dependency) => invalidated(dependency)
+        case Evict(key) => evict(key)
+        case Enumerate(receiver) => receiver ! CacheKeys(cachedValues.keySet.toSeq)
+        case AddListener(listener) => listeners += listener
+        case RemoveListener(listener) => listeners -= listener
         case other => error(self + " has received unexpected message of " + other)
       }
     }
 
     def lookup[A](key: CacheKey[A], receiver: Actor) {
       cachedValues.get(key) match {
-        case Some((dependencies, value)) => receiver ! Found(value)
-        case None => receiver ! NotFound
+        case Some((dependencies, value)) => hit(key, value, receiver)
+        case None => miss(key, receiver)
       }
     }
 
-    def push[A](key: CacheKey[A], deps: Iterable[Dependency], value: A) {
+    def hit(key: CacheKey[_], value: Any, receiver: Actor) {
+      receiver ! Hit(value)
+      listeners foreach(_.hit(key))
+    }
+
+    def miss(key: CacheKey[_], receiver: Actor) {
+      receiver ! Miss
+      listeners foreach(_.miss(key))
+    }
+
+    def push[A](key: CacheKey[A], deps: Iterable[Dependency], time: Long, value: A) {
       cachedValues += (key -> (deps, value))
+      listeners foreach(_.push(key, value, deps, time))
     }
 
     def invalidated(dependency: Dependency) {
@@ -267,8 +347,14 @@ private[cache] class CacheImpl extends Cache {
 
       for(entry <- cachedValues;
           if(entry._2._1.exists(_ == dependency))) {
-        cachedValues -= entry._1
+        evict(entry._1)
       }
+      listeners foreach(_.invalidated(dependency))
+    }
+
+    def evict[A](key: CacheKey[A]) {
+      cachedValues -= key
+      listeners foreach(_.evict(key))
     }
   }
 }

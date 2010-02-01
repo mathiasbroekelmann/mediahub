@@ -9,7 +9,9 @@ import scala.actors.Actor._
 
 import org.mediahub.util.Types._
 
-class LimitingCacheStrategy(defaultLimit: Int) extends CacheListener {
+class LimitingCacheStrategy(cache: Cache, defaultLimit: Int) extends CacheListener {
+
+  def this(cache: Cache) = this(cache, 0)
 
   assert(defaultLimit >= 0, "default limit must be greater or equal zero: " + defaultLimit)
 
@@ -19,19 +21,18 @@ class LimitingCacheStrategy(defaultLimit: Int) extends CacheListener {
    * @param key the cache key
    * @param value the cached value
    */
-  override def hit[A](key: CacheKey[A], value: A) {}
+  override def hit[A](key: CacheKey[A]) {
+    collector ! Hit(key)
+  }
 
   /**
    * Notify the listener about a miss on the cache
    *
    * @param key the cache key
    */
-  override def miss[A](key: CacheKey[A]) {}
-
-  /**
-   * Notify the listener that the value of the given key is evicted from the cache.
-   */
-  override def evict[A](key: CacheKey[A]) {}
+  override def miss[A](key: CacheKey[A]) {
+    collector ! Miss(key)
+  }
 
   /**
    * Notify the listener about a new or updated value for a cache key.
@@ -41,7 +42,9 @@ class LimitingCacheStrategy(defaultLimit: Int) extends CacheListener {
    * @param time the time needed to compute the value. This value can be used to optimize the values stored in the cache
    * @param control allows controlling the cache like flushing cache keys if needed.
    */
-  override def push[A](key: CacheKey[A], value: A, time: Int, control: CacheControl) {}
+  override def push[A](key: CacheKey[A], value: A, dependencies: Iterable[Dependency], time: Long) {
+    collector ! Push(key, time)
+  }
 
   /**
    * Provide a rating which is used to determine if the cached value for the key should be evicted if the limit for the cache key is reached.
@@ -61,22 +64,17 @@ class LimitingCacheStrategy(defaultLimit: Int) extends CacheListener {
     collector ! Limit(keyType, limit)
   }
 
-  case class Push[A](key: CacheKey[A], time: Int, control: CacheControl)
+  case class Push[A](key: CacheKey[A], time: Long)
+  case class Hit[A](key: CacheKey[A])
+  case class Miss[A](key: CacheKey[A])
   case class Limit(clazz: Class[_], limit: Int)
 
   private[this] val collector = actor {
 
     /**
-     * ensures that there will always be an initial cache key metrics instance for a give cache key.
-     */
-    def defaultKeyTypeMetrics(keyType: Class[CacheKey[Any]]): Map[CacheKey[Any], CacheKeyMetrics] = {
-      Map.empty[CacheKey[Any], CacheKeyMetrics].withDefault(key => CacheKeyMetrics(key))
-    }
-
-    /**
      * store the metrics for each cache key type and cache key
      */
-    var keyTypeMetrics = Map.empty[Class[CacheKey[Any]], Map[CacheKey[Any], CacheKeyMetrics]].withDefault(defaultKeyTypeMetrics)
+    var metrics = Map.empty[CacheKey[Any], CacheKeyMetrics].withDefault(key => CacheKeyMetrics(key))
 
     /**
      * store the limits for each cache key type.
@@ -85,31 +83,39 @@ class LimitingCacheStrategy(defaultLimit: Int) extends CacheListener {
 
     loop {
       react {
-        case Push(key, time, control) => pushInternal(key, time, control)
+        case Hit(key) => hitInternal(key)
+        case Miss(key) => missInternal(key)
+        case Push(key, time) => pushInternal(key, time)
         case Limit(clazz, limit) => limitInternal(clazz, limit)
         case other => error(self + " has received unexpected message of " + other)
       }
     }
 
     def update(cacheKey: CacheKey[Any], 
-               keyTypeMetrics: Map[CacheKey[Any], CacheKeyMetrics])
-                (f: CacheKeyMetrics => CacheKeyMetrics): Map[CacheKey[Any], CacheKeyMetrics] = {
-      val keyType = cacheKey.getClass.asInstanceOf[Class[CacheKey[Any]]]
-      keyTypeMetrics + (cacheKey -> f(keyTypeMetrics(cacheKey)))
+               metrics: Map[CacheKey[Any], CacheKeyMetrics])
+                (f: CacheKeyMetrics => CacheKeyMetrics) = {
+      metrics + (cacheKey -> f(metrics(cacheKey)))
     }
 
-    def pushInternal(cacheKey: CacheKey[Any], time: Int, control: CacheControl) {
-      val keyType = cacheKey.getClass.asInstanceOf[Class[CacheKey[Any]]]
-      val updatedMetrics = update(cacheKey, keyTypeMetrics(keyType)) {_.computed(time)}
-      evictOverflowingKeys(keyType, updatedMetrics, control)
-      keyTypeMetrics += keyType -> updatedMetrics
+    def hitInternal(cacheKey: CacheKey[Any]) {
+      metrics = update(cacheKey, metrics) { _.hit }
+    }
+
+    def missInternal(cacheKey: CacheKey[Any]) {
+      metrics = update(cacheKey, metrics) { _.miss }
+    }
+
+    def pushInternal(cacheKey: CacheKey[Any], time: Long) {
+      metrics = update(cacheKey, metrics) {_.computed(time)}
+      val keyType = cacheKey.getClass
+      evictOverflowingKeys(keyType, metrics.filter(_._1.getClass == keyType))
     }
 
     def limitInternal(keyType: Class[_], limit: Int) {
       limits += keyType -> limit
     }
 
-    def evictOverflowingKeys(keyType: Class[_], metrics: Map[CacheKey[Any], CacheKeyMetrics], control: CacheControl) {
+    def evictOverflowingKeys(keyType: Class[_], metrics: Map[CacheKey[Any], CacheKeyMetrics]) {
       // first check if limit is exceded at all
 
       /**
@@ -127,7 +133,7 @@ class LimitingCacheStrategy(defaultLimit: Int) extends CacheListener {
         val sortedByHits = metrics.toSeq.sortBy(x => rate(x._2))
         // evict all cache keys with lowest hit
         for(entry <- sortedByHits.take(sortedByHits.size - limit)) {
-          control.evict(entry._1)
+          cache.evict(entry._1)
         }
       }
       
@@ -154,7 +160,7 @@ class LimitingCacheStrategy(defaultLimit: Int) extends CacheListener {
  * TODO: it is currently possible that hits and misses counters are overflowing.
  */
 case class CacheKeyMetrics(key: CacheKey[_],
-                           computationTimes: Seq[Int],
+                           computationTimes: Seq[Long],
                            hits: Long,
                            misses: Long,
                            accessTime: Option[Long],
@@ -182,7 +188,7 @@ case class CacheKeyMetrics(key: CacheKey[_],
    *
    * @param time the computation time of a value for the cache key
    */
-  def computed(time: Int)  = {
+  def computed(time: Long)  = {
     assert(time >= 0, "time must be greater or equal to 0. was: " + time)
     val times = time +: computationTimes
     // keep only the last maxTimes values of computation times to reduce memory consumption
@@ -211,7 +217,7 @@ case class CacheKeyMetrics(key: CacheKey[_],
     /**
      * average computation time.
      */
-    lazy val average: Long = computationTimes.foldLeft(0)(_ + _) / computationTimes.size
+    lazy val average: Long = computationTimes.foldLeft(0L)(_ + _) / computationTimes.size
 
     /**
      * min computation time.
@@ -221,7 +227,7 @@ case class CacheKeyMetrics(key: CacheKey[_],
     /**
      * max computation time.
      */
-    lazy val max: Long = computationTimes.foldLeft(0)(Math.max(_, _))
+    lazy val max: Long = computationTimes.foldLeft(0L)(Math.max(_, _))
 
     /**
      * string representation of the stats.
