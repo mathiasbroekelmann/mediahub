@@ -3,13 +3,15 @@
  * upon cache value computations.
  *
  * Use Cache#get(CacheKey) to get the value of the given key.
+ * Use Cache#dependsOn(...) to define a dependency during cache value computation.
  */
 package org.mediahub.cache
 
 import scala.util.DynamicVariable
 
 /**
- *
+ * The cache allows cached retrival of computed values.
+ * It supports tracking dependencies during the computation of an value.
  */
 trait Cache {
 
@@ -30,22 +32,48 @@ trait Cache {
 trait CacheKey[A] {
 
   /**
-   * Computes the value of this key
+   * Computes the value of this key.
+   * Use Cache#dependsOn(Dependency) to define the dependencies for the returned value.
    */
   def compute: A
 }
 
+/**
+ * Companion object for defining cache dependencies.
+ */
 object Cache {
-  
-  private val current = new DynamicVariable[Option[ComputationContext]](None)
+
+  /**
+   * The current computation context which collects all dependencies during a computation.
+   */
+  private val currentComputationContext = new DynamicVariable[Option[ComputationContext]](None)
 
   /**
    * Add a dependency to the current computation context.
    * If there is no such context this function will do nothing
    */
   def dependsOn(dependency: Dependency) {
-    for(computation <- current.value)
+    for(computation <- currentComputationContext.value)
       computation dependsOn dependency
+  }
+
+  /**
+   * Add a dependency on time.
+   * The computed value will be valid until the current system time is equal or after the given milliseconds since 1. january 1970 0 oclock
+   */
+  def validUntil(millis: Long) {
+    // TODO: implement time based dependency
+    error("NYI")
+  }
+
+  /**
+   * Add a dependency on time.
+   * The computed value will be valid for the timespan defined by the given milliseconds.
+   * If millis is equal or lower than zero the computed value will be invalidated immediately
+   */
+  def validFor(millis: Long) {
+    // TODO: implement time based dependency
+    error("NYI")
   }
 
   /**
@@ -62,16 +90,21 @@ object Cache {
    * compute f in with the given computation context.
    */
   private[cache] def withContext[A](cc: ComputationContext) (f: => A): A = {
-    val parentizedContext = for(parent <- current.value)
+    val parentizedContext = for(parent <- currentComputationContext.value)
                               yield cc.withParent(parent)
     val context = parentizedContext.orElse(Some(cc))
-    current.withValue(context) (f)
+    currentComputationContext.withValue(context) (f)
   }
 
-  def currentContext = current.value
+  /**
+   * Get the current computation context.
+   */
+  def currentContext = currentComputationContext.value
 }
 
-
+/**
+ * a computation context which ignores any dependencies.
+ */
 private[cache] object DisabledDependenciesComputationContext extends ComputationContext {
   def dependsOn(dependency: Dependency) {}
 
@@ -99,6 +132,50 @@ trait ComputationContext {
    */
   private[cache] def withParent(parent: ComputationContext): ComputationContext
 }
+
+trait CacheListener {
+  /**
+   * Notify the listener about a hit in the cache.
+   *
+   * @param key the cache key
+   * @param value the cached value
+   */
+  def hit[A](key: CacheKey[A], value: A) {}
+
+  /**
+   * Notify the listener about a miss on the cache
+   *
+   * @param key the cache key
+   */
+  def miss[A](key: CacheKey[A]) {}
+
+  /**
+   * Notify the listener that the value of the given key is evicted from the cache.
+   */
+  def evict[A](key: CacheKey[A]) {}
+
+  /**
+   * Notify the listener about a new or updated value for a cache key.
+   * 
+   * @param key the cache key
+   * @param value the cached value
+   * @param time the time needed to compute the value. This value can be used to optimize the values stored in the cache
+   * @param control allows controlling the cache like flushing cache keys if needed.
+   */
+  def push[A](key: CacheKey[A], value: A, time: Int, control: CacheControl) {}
+}
+
+/**
+ * Allows modifiying the cache state.
+ */
+trait CacheControl {
+
+  /**
+   * evict the given key and its value from the cache.
+   */
+  def evict[A](key: CacheKey[A])
+}
+
 
 import scala.actors.Actor
 import Actor._
