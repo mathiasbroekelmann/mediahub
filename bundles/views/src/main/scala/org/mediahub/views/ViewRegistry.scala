@@ -14,17 +14,18 @@ import org.mediahub.cache.{Cache, Dependency, CacheKey}
 /**
  * View registry implementatione that uses the type hierarchy to resolve the views.
  */
-class ViewRegistryImpl(bindingOrdering: Option[Ordering[ClassifiedBinding[_]]], cache: Option[Cache]) extends ViewRegistry {
+class ViewRegistryImpl extends ViewRegistry {
 
   /**
-   * create a view registry which doesn't cache the resolved view bindings.'
+   * Defines how concurrent view bindings are ranked.
+   * By default the ranking of the view binding is used.
    */
-  def this() = this(Some(ByRanking), None)
+  def bindingOrdering: Option[Ordering[ClassifiedBinding[_]]] = Some(ByRanking)
 
   /**
-   * verify input
+   * Provide the cache to use. If not specified (default) the resolved view bindings will not be cached at all.
    */
-  assert(cache != null, "cache must not be null")
+  def cache: Option[Cache] = None
 
   /**
    * register a view binding.
