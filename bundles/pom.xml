@@ -36,6 +36,7 @@
     <module>util</module>
     <module>rest</module>
     <module>cache</module>
+    <module>html</module>
   </modules>
 
 </project>
