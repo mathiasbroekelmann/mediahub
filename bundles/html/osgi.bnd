@@ -2,6 +2,4 @@
 # Use this file to add customized Bnd instructions for the bundle
 #-----------------------------------------------------------------
 
-Bundle-Module: ${bundle.namespace}.internal.OsgiViewModule
-
-Import-Package: scala.*;version=2.8,*
+Bundle-Module: ${bundle.namespace}.internal.OsgiModule

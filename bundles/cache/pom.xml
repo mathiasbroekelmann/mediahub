@@ -14,8 +14,8 @@
     </properties>
 
     <modelVersion>4.0.0</modelVersion>
-    <groupId>org.mediahub</groupId>
-    <artifactId>cache</artifactId>
+    <groupId>org.mediahub.bundles</groupId>
+    <artifactId>org.mediahub.cache</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <name>${bundle.symbolicName}</name>

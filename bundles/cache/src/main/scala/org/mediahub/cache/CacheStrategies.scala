@@ -13,7 +13,7 @@ class LimitingCacheStrategy(cache: Cache, defaultLimit: Int) extends CacheListen
 
   def this(cache: Cache) = this(cache, 0)
 
-  assert(defaultLimit >= 0, "default limit must be greater or equal zero: " + defaultLimit)
+  assert(defaultLimit >= 0, "default limit must be greater or equal than zero: " + defaultLimit)
 
   /**
    * Notify the listener about a hit in the cache.

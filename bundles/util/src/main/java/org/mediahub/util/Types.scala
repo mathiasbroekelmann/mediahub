@@ -16,23 +16,23 @@ object Types {
    * <li>the parent interfaces of the interfaces (recursive)
    * <li>the super class (if any) repeating the previous steps for it 
    */
-  def typesOf(clazz: Class[_]): Stream[Class[_]] = {
+  def typesOf[A, B>:A](clazz: Class[A]): Stream[Class[B]] = {
 
-    val filter = scala.collection.mutable.Set[Class[_]]()
+    val filter = scala.collection.mutable.Set[Class[B]]()
 
-    def types(clazzes: List[Class[_]]): Stream[Class[_]] = {
+    def types(clazzes: List[Class[B]]): Stream[Class[B]] = {
       clazzes.map(of(_)).toStream.flatten
     }
 
-    def interfacesOf(clazz: Class[_]): Stream[Class[_]] = {
+    def interfacesOf(clazz: Class[B]): Stream[Class[B]] = {
 
-      val interfaces = clazz.getInterfaces.toList
+      val interfaces = clazz.getInterfaces.toList.asInstanceOf[List[Class[B]]]
       types(interfaces)
     }
 
-    def of(clazz: Class[_]): Stream[Class[_]] = {
+    def of(clazz: Class[B]): Stream[Class[B]] = {
       if(filter.add(clazz)) {
-        Option(clazz.getSuperclass) match {
+        Option(clazz.getSuperclass.asInstanceOf[Class[B]]) match {
           case Some(superclass) => Stream.cons(clazz, interfacesOf(clazz)).append(of(superclass))
           case None => Stream.cons(clazz, interfacesOf(clazz))
         }
@@ -41,6 +41,6 @@ object Types {
       }
     }
 
-    of(clazz)
+    of(clazz.asInstanceOf[Class[B]])
   }
 }

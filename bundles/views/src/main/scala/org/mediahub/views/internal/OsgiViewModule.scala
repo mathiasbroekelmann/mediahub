@@ -8,6 +8,7 @@ package org.mediahub.views.internal
 import com.google.inject._
 
 import org.mediahub.views._
+import org.mediahub.cache.Cache
 
 import org.ops4j.peaberry._
 import Peaberry._
@@ -27,18 +28,25 @@ class OsgiViewModule extends AbstractModule {
 
   @Provides
   @Singleton
-  def viewRegistry: ViewRegistry = new ViewRegistryImpl
+  def viewRegistry(somecache: Provider[Cache]): ViewRegistry = {
+    new ViewRegistryImpl() {
+      override val cache = Some(somecache.get)
+    }
+  }
 
   @Provides
   def viewRenderer(registry: ViewRegistry): CustomizableViewRenderer =
     new ViewRendererImpl(registry)
 
   def configure {
+    bind(classOf[Cache]).toProvider(service(classOf[Cache]).single)
     bind(classOf[ViewModuleTracker]).asEagerSingleton
-    bind(export(classOf[CustomizableViewRenderer]))
-      .toProvider(service(classOf[CustomizableViewRenderer])
-                  .attributes(objectClass(classOf[CustomizableViewRenderer], classOf[ViewRenderer]))
-                  .export())
+
+    val exportedInterfaces = objectClass(classOf[CustomizableViewRenderer],
+                                         classOf[ViewRenderer])
+    bind(export(classOf[CustomizableViewRenderer])).toProvider(service(classOf[CustomizableViewRenderer])
+                                                               .attributes(exportedInterfaces)
+                                                               .export())
   }
 }
 
@@ -59,9 +67,9 @@ class ViewModuleTracker @Inject() (bc: BundleContext, viewRegistry: ViewRegistry
     def modifiedService(reference: ServiceReference, service: AnyRef) {}
 
     def removedService(reference: ServiceReference, service: AnyRef) {
-      bc.ungetService(reference)
       val registry = service.asInstanceOf[TrackingViewRegistry]
       registry.flush
+      bc.ungetService(reference)
     }
   }
 
@@ -87,7 +95,7 @@ class TrackingViewRegistry(delegate: ViewRegistry) extends ViewRegistry {
         case Flush => {
             bindingRegistrations foreach (_.unregister)
             bindingRegistrations = Seq.empty
-        }
+          }
       }
     }
   }

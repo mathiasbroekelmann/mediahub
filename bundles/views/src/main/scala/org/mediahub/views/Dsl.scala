@@ -21,18 +21,24 @@ package org.mediahub.views
  * A Classifier for a view.
  */
 
-abstract case class Classifier[A] {
+trait Classifier[A] {
 
   /**
-   * the type of the view result.
+   * The type of the view result.
    */
   def resultType: Class[A]
 
   /**
-   * determine of the binding is valid for this classifier.
+   * Determine of this classifier matches on the given classifier.
+   * This implementation will do an equals test with this classifier.
    */
-  def isValid(binding: ClassifiedBinding[_]): Boolean = false
+  def matches[B](classifier: Classifier[B]): Boolean =
+    this == classifier
 
+  /**
+   * Implements equals to check reference equality.
+   * Since classifiers are used as constant identifiers.
+   */
   override def equals(obj: Any): Boolean = {
     obj match {
       case ref: AnyRef => eq(ref)
@@ -46,13 +52,7 @@ abstract case class Classifier[A] {
  * type A defines the output of the view (String, NodeSeq, ...)
  */
 abstract case class ViewClassifier[A](implicit clazz: ClassManifest[A]) extends Classifier[A] {
-
   val resultType = clazz.erasure.asInstanceOf[Class[A]]
-
-  override def isValid(binding: ClassifiedBinding[_]) = binding match {
-    case x: ViewBinding[_, _] => true
-    case _ => false
-  }
 }
 
 /**
@@ -61,13 +61,7 @@ abstract case class ViewClassifier[A](implicit clazz: ClassManifest[A]) extends 
  * type B defines the view parameters type(s).
  */
 abstract case class ParamViewClassifier[A, B](implicit clazz: ClassManifest[A]) extends Classifier[A] {
-
   val resultType = clazz.erasure.asInstanceOf[Class[A]]
-
-  override def isValid(binding: ClassifiedBinding[_]) = binding match {
-    case x: ParameterViewBinding[_, _, _] => true
-    case _ => false
-  }
 }
 
 /**
@@ -81,7 +75,7 @@ trait ViewBinder {
    *
    * @return a view binding builder to bind the actual view definition.
    */
-  def bindView[A](classifier: ViewClassifier[A]): ViewBindingBuilder[A]
+  def bindView[A](classifier: ViewClassifier[A]): UnRankedViewBindingBuilder[A]
 
   /**
    * Bind a view for a paramterized view. Variant of #bindView(ViewClassifier) to support view parameters.
@@ -89,12 +83,17 @@ trait ViewBinder {
    * @param classifier the view classifier to bind a view for.
    * @return a view binding builder to bind the actual view definition optionally receiving the provided parameters.
    */
-  def bindView[A, B](classifier: ParamViewClassifier[A, B]): ParamViewBindingBuilder[A, B]
+  def bindView[A, B](classifier: ParamViewClassifier[A, B]): UnRankedParamViewBindingBuilder[A, B]
 
   /**
    * install the given module as a child module to this binder.
    */
   def install(module: ViewModule): Unit
+
+  /**
+   * create a new view binder which uses the provided ranking for all bound views if not specified on a single view binding.
+   */
+  def withRanking(ranking: Int): ViewBinder
 }
 
 /**
@@ -130,7 +129,7 @@ trait ViewBindingRegistration {
 /**
  * A view binding.
  */
-trait ClassifiedBinding[A] {
+trait ClassifiedBinding[A] extends Ranking {
 
   /**
    * The class for this binding.
@@ -141,6 +140,17 @@ trait ClassifiedBinding[A] {
    * The classifier of this binding.
    */
   def classifier: Classifier[_]
+}
+
+/**
+ * Provides a ranking value which can be used order things.
+ */
+trait Ranking {
+
+  /**
+   * @return the actual ranking for this thing. None means that there was no ranking defined.
+   */
+  def ranking: Option[Int]
 }
 
 /**
@@ -198,12 +208,45 @@ trait TypedViewBindingBuilder[A, B] {
 }
 
 /**
+ * Allows the definition of a ranking.
+ */
+trait RankedViewBindingBuilder[A] {
+
+  /**
+   * define the ranking for the view.
+   */
+  def withRanking(ranking: Int): A
+}
+
+/**
+ * Intermediate view binding builder which also allows the definition of a ranking.
+ */
+trait UnRankedViewBindingBuilder[A] extends RankedViewBindingBuilder[ViewBindingBuilder[A]]
+                                       with ViewBindingBuilder[A]
+
+/**
  * Allows binding of a view definition.
  */
 trait ViewBindingBuilder[A] {
   def of[B](implicit clazz: ClassManifest[B]): TypedViewBindingBuilder[A, B]
 }
 
+/**
+ * Intermediate parameter view binding builder which also allows the definition of a ranking.
+ */
+trait UnRankedParamViewBindingBuilder[A, B] extends RankedViewBindingBuilder[ParamViewBindingBuilder[A, B]]
+                                               with ParamViewBindingBuilder[A, B]
+
+/**
+ * bind the actual parameterized view.
+ */
+trait ParamViewBindingBuilder[A, B] extends RankedViewBindingBuilder[ParamViewBindingBuilder[A, B]] {
+  def of[C](implicit clazz: ClassManifest[C]): TypedParamViewBindingBuilder[A, B, C]
+}
+
+/**
+ * Variant of a view binding builder which also provides a parameter.
+ */
 trait TypedParamViewBindingBuilder[A, B, C] extends TypedViewBindingBuilder[A, C] {
   def to(f: (C, B) => A): ViewBindingRegistration
 
@@ -215,13 +258,6 @@ trait TypedParamViewBindingBuilder[A, B, C] extends TypedViewBindingBuilder[A, C
   def withParentTo(f: (C, B, ParameterViewChain[C, B, A]) => A): ViewBindingRegistration
 
   // add more to ... methods for other kinds of view implementations.
-}
-
-/**
- * bind the actual parameterized view.
- */
-trait ParamViewBindingBuilder[A, B] {
-  def of[C](implicit clazz: ClassManifest[C]): TypedParamViewBindingBuilder[A, B, C]
 }
 
 trait ViewRenderer {
