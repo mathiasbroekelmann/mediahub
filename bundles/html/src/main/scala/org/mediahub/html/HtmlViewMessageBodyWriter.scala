@@ -20,11 +20,6 @@ import org.mediahub.views.{ViewRenderer, ViewClassifier}
 import scala.xml.{Xhtml, NodeSeq}
 
 /**
- * Root view classifier for an xhtml content.
- */
-object xhtml extends ViewClassifier[NodeSeq]
-
-/**
  * Uses a provided view renderer to render any kind of object.
  */
 @Provider
@@ -46,7 +41,7 @@ abstract class HtmlViewMessageBodyWriter extends MessageBodyWriter[AnyRef] {
               annotations: Array[Annotation], mediaType: MediaType,
               httpHeaders: MultivaluedMap[String, Object],
               out: OutputStream): Unit = {
-    val root = renderer.render(some) as xhtml
+    val root = renderer.render(some) as XhtmlViews.xhtml
     val xhtmlAsString = Xhtml.toXhtml(root)
     val writer = new PrintWriter(new OutputStreamWriter(out, "UTF-8"));
     writer.print(xhtmlAsString)

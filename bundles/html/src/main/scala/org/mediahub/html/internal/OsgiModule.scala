@@ -16,6 +16,8 @@ import org.ops4j.peaberry.util._
 import Attributes._
 import TypeLiterals._
 
+import java.util.Locale
+
 import org.mediahub.views.{CustomizableViewRenderer, ViewRenderer}
 
 import org.mediahub.html._
@@ -39,7 +41,16 @@ class OsgiModule extends AbstractModule {
    */
   @Provides
   @Context
-  def locale = java.util.Locale.getDefault
+  def locale = Locale.getDefault
+
+  @Provides
+  def htmlViewModule(rendererProvider: Provider[ViewRenderer],
+                     @Context contextLocale: Provider[Locale]): HtmlViewModule = {
+    new HtmlViewModule {
+      def renderer = rendererProvider.get
+      def locale = contextLocale.get
+    }
+  }
 
   /**
    * provide a view renderer with some defaults.

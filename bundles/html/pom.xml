@@ -25,6 +25,14 @@
     <dependencies>
         <dependency>
             <groupId>org.mediahub.bundles</groupId>
+            <artifactId>org.mediahub.web-links</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mediahub.bundles</groupId>
+            <artifactId>org.mediahub.resources</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mediahub.bundles</groupId>
             <artifactId>org.mediahub.views</artifactId>
         </dependency>
         <dependency>

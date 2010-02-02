@@ -11,10 +11,25 @@ import com.google.inject.{Inject, Provider}
 
 import scala.xml.NodeSeq
 
+import java.util.Locale
+
+import org.mediahub.resources._
+
+import org.mediahub.web.links.LinkRenderer
+import LinkRenderer._
+
+import org.osgi.framework.{Bundle, BundleContext}
+
 case class Xml extends ViewClassifier[NodeSeq]
 case class Text extends ViewClassifier[String]
 
 object XhtmlViews {
+  
+  /**
+   * Root view classifier for an xhtml content.
+   */
+  object xhtml extends ViewClassifier[NodeSeq]
+
   /**
    * render the body tag in an html content
    */
@@ -40,18 +55,40 @@ object XhtmlViews {
   object resources extends Xml
 }
 
+/**
+ * mixin trait to be used in view modules
+ *
+ * TODO: move to web-links module
+ */
+trait LinkRendererProxy extends LinkRenderer {
+
+  def linkRenderer: LinkRenderer
+  override def linkTo[A<:AnyRef](implicit clazz: ClassManifest[A]) = linkRenderer.linkTo(clazz)
+  override def linkTo[A<:AnyRef](clazz: java.lang.Class[A]) = linkRenderer.linkTo(clazz)
+  override def linkTo[A<:AnyRef](target: A) = linkRenderer.linkTo(target)
+}
+
+/**
+ * mixin trait to be used in view modules
+ *
+ * TODO: move to views module
+ */
+trait ViewRendererProxy extends ViewRenderer {
+  def renderer: ViewRenderer
+  override def render(bean: Any) = renderer.render(bean)
+}
+
 
 /**
  * define the core views for rendering html content.
  */
-class HtmlViewModule @Inject() (val renderer: Provider[ViewRenderer],
-                                @Context val locale: Provider[java.util.Locale]) extends ViewModule {
+abstract class HtmlViewModule extends ViewModule with ViewRendererProxy {
 
   import XhtmlViews._
-  
-  def render = renderer.get.render _
 
-  def lang = locale.get.getLanguage
+  def locale: Locale
+  
+  def lang = locale.getLanguage
 
   def configure(binder: ViewBinder) {
     import binder._
@@ -84,3 +121,4 @@ class HtmlViewModule @Inject() (val renderer: Provider[ViewRenderer],
     }
   }
 }
+
