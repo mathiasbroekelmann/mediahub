@@ -223,6 +223,21 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>1.4</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mediahub.bundles</groupId>
+                <artifactId>org.mediahub.resources</artifactId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mediahub.bundles</groupId>
+                <artifactId>org.mediahub.web-links</artifactId>
+                <version>1.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
                 <groupId>org.mediahub.bundles</groupId>
                 <artifactId>org.mediahub.views</artifactId>
                 <version>1.0-SNAPSHOT</version>

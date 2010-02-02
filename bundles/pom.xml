@@ -37,6 +37,7 @@
     <module>rest</module>
     <module>cache</module>
     <module>html</module>
+    <module>resources</module>
   </modules>
 
 </project>
