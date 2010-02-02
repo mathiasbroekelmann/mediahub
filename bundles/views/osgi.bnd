@@ -3,3 +3,5 @@
 #-----------------------------------------------------------------
 
 Bundle-Module: ${bundle.namespace}.internal.OsgiViewModule
+
+Import-Package: scala.*;version=2.8,*
