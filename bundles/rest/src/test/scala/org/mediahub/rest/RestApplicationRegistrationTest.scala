@@ -60,6 +60,7 @@ class RestApplicationRegistrationTest {
 
   @After
   def tearDown {
+    restAppReg.close
   }
 
   @Test

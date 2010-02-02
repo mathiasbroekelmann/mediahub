@@ -15,6 +15,7 @@ import scala.collection.JavaConversions._
 
 import scala.actors.Actor._
 import scala.actors.Actor
+import scala.actors.Debug._
 
 import javax.ws.rs.core.Application
 import javax.ws.rs.Path
@@ -39,11 +40,30 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
   case class Update(registrars: Seq[_])
   case class Publish(application: Application)
   case class Unpublish
+  case class Exit
+
+  def close {
+    self.trapExit = true
+    self.link(collector)
+    self.link(updater)
+    self.link(publisher)
+    collector ! Exit
+    self.receive { case scala.actors.Exit(from, message) => }
+    updater ! Exit
+    self.receive { case scala.actors.Exit(from, message) => }
+    publisher ! Exit
+    self.receive { case scala.actors.Exit(from, message) => }
+  }
 
   /**
    * get all add/remove events and notifies the updater
    */
-  val collector = actor {
+  val collector: Actor = actor {
+
+    println("starting collector")
+
+//    updater.link(collector)
+//    publisher.link(collector)
 
     var registrars = Seq.empty[AnyRef]
 
@@ -65,6 +85,10 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
       receive {
         case Added(registrar) => add(registrar)
         case Removed(registrar) => remove(registrar)
+        case Exit => {
+            println("exiting collector")
+            exit()
+          }
         case _ =>
       }
     }
@@ -74,6 +98,9 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
    * the updater actually manages the rest application by registering services from all provided registrars.
    */
   private val updater = actor {
+
+    println("starting updater")
+
     loop {
       receive {
         case Update(registrars) => {
@@ -84,6 +111,10 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
             // wait some time to see if there are more update events comming in
             // TODO: find a good value for sleep time.
             Thread.sleep(500)
+          }
+        case Exit => {
+            println("exiting updater")
+            exit
         }
         case _ =>
       }
@@ -101,13 +132,13 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
         override val classes = reg.classes
         override val singletons = reg.singletons
         override val filterRegistrars = registrars.filter(_.isInstanceOf[FilterRegistrar])
-                                                  .map(_.asInstanceOf[FilterRegistrar])
+        .map(_.asInstanceOf[FilterRegistrar])
         // TODO: configure alias
         override val alias = Some("/")
         override val provider = new ProviderFactory {
           def apply[A](clazz: Class[A]) = reg.providers
-                                             .get(clazz)
-                                             .map(_.asInstanceOf[Provider[A]])
+          .get(clazz)
+          .map(_.asInstanceOf[Provider[A]])
         }
       }
       if(hasRootResource(app)) {
@@ -115,24 +146,25 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
       } else {
         publisher ! Unpublish
       }
-    }
 
-    def hasRootResource(app: Application) = {
+      def hasRootResource(app: Application) = {
 
-      def hasPathAnnotation(clazz: Class[_]) = clazz.getAnnotation(classOf[Path]) != null
+        def hasPathAnnotation(clazz: Class[_]) = clazz.getAnnotation(classOf[Path]) != null
 
-      val rootResourceInClasses = app.getClasses.find(hasPathAnnotation(_))
-      val rootResourceInSingletons = app.getSingletons.find(s => hasPathAnnotation(s.getClass))
+        val rootResourceInClasses = app.getClasses.find(hasPathAnnotation(_))
+        val rootResourceInSingletons = app.getSingletons.find(s => hasPathAnnotation(s.getClass))
 
-      rootResourceInClasses.isDefined || rootResourceInSingletons.isDefined
+        rootResourceInClasses.isDefined || rootResourceInSingletons.isDefined
+      }
     }
   }
-
+  
   /**
    * the publisher register the application in the bundle context
    */
   private val publisher = actor {
 
+    println("starting publisher")
     var registration: Option[Registration] = None
     
     loop {
@@ -141,10 +173,15 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
         case Publish(app) => {
             for (reg <- registration) reg.unregister
             registration = Some(appRegistry.register(app))
-        }
+          }
         case Unpublish => {
             for (reg <- registration) reg.unregister
             registration = None
+          }
+        case Exit => {
+            for (reg <- registration) reg.unregister
+            println("exiting publisher")
+            exit
         }
         case _ =>
       }
