@@ -10,3 +10,5 @@ Embed-Dependency: *;scope=compile|runtime;type=!pom;inline=true
 
 Import-Package: !sun.misc,\
  *
+
+Export-Package: scala.*;version=${wrapped.version}
