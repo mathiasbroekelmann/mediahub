@@ -35,14 +35,9 @@ object XhtmlViews {
   object metatags extends Xml
 
   /**
-   * render the link tags in the html head section
+   * render the link and script tags in the html head section
    */
-  object links extends Xml
-
-  /**
-   * render the script tags in the html head section
-   */
-  object scripts extends Xml
+  object resources extends Xml
 }
 
 
@@ -73,8 +68,7 @@ class HtmlViewModule @Inject() (val renderer: Provider[ViewRenderer],
       <head>
         <title>{render(self) as title}</title>
         {render(self) as metatags}
-        {render(self) as links}
-        {render(self) as scripts}
+        {render(self) as resources}
       </head>
     }
 
