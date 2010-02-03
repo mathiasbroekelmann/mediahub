@@ -5,6 +5,8 @@
 
 package org.mediahub.util
 
+import java.lang.reflect.{Type}
+
 object Types {
 
   /**
@@ -42,5 +44,41 @@ object Types {
     }
 
     of(clazz.asInstanceOf[Class[B]])
+  }
+
+  /**
+   * Selector for list of services which should implement a specific generic type.
+   * Example usage:
+   *
+   * <pre>
+   * trait Service[A]
+   * class ServiceA extends Service[String]
+   * class ServiceB extends Service[Other]
+   * // create a generic type that identifies a Service[String] implementation
+   * val genericType = com.google.inject.util.Types.newParameterizedType(classOf[Service[_], classOf[String])
+   * val services = List(new ServiceA(), new ServiceB())
+   * val servicesOfString = services.flatMap (implementedFor[Service[String]](genericType))
+   * assertThat(servicesOfString, is(new ServiceA() :: List.empty[Service[String]]))
+   * </pre>
+   */
+  def implementedFor[A<:AnyRef](genericType: Type)(implicit clazz: ClassManifest[A]): (AnyRef => Traversable[A]) = { a =>
+    def implementsType(clazz: Class[_]): Boolean = {
+      clazz.getGenericInterfaces find(_ == genericType) match {
+        case Some(x) => true
+        case None => {
+            val superclass = clazz.getSuperclass
+            if(superclass == null) {
+              false
+            } else {
+              implementsType(superclass)
+            }
+          }
+      }
+    }
+    if(implementsType(a.getClass)) {
+      List(a.asInstanceOf[A])
+    } else {
+      Nil
+    }
   }
 }
