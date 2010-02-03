@@ -32,7 +32,7 @@ class OsgiModule extends AbstractModule {
   @Provides
   def htmlWriter(rendererProvider: Provider[ViewRenderer]): HtmlViewMessageBodyWriter = {
     new HtmlViewMessageBodyWriter {
-      def renderer = rendererProvider.get
+      override def renderer = Some(rendererProvider.get)
     }
   }
 
