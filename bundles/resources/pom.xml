@@ -32,6 +32,25 @@
             <artifactId>org.mediahub.web-links</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.mediahub.bundles</groupId>
+            <artifactId>org.mediahub.rest</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j</groupId>
+            <artifactId>peaberry</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.ops4j.peaberry.extensions</groupId>
+            <artifactId>peaberry.activation</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>org.osgi</groupId>
             <artifactId>org.osgi.core</artifactId>
             <optional>true</optional>
