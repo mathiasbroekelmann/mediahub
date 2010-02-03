@@ -134,7 +134,7 @@ class RestApplicationRegistration(appRegistry: ApplicationRegistry) {
         override val filterRegistrars = registrars.filter(_.isInstanceOf[FilterRegistrar])
         .map(_.asInstanceOf[FilterRegistrar])
         // TODO: configure alias
-        override val alias = Some("/")
+        override val alias = Some("mediahub")
         override val provider = new ProviderFactory {
           def apply[A](clazz: Class[A]) = reg.providers
           .get(clazz)

@@ -16,6 +16,9 @@ import scala.actors.Actor
 
 import javax.ws.rs.core.Application
 
+import javax.ws.rs.ext.RuntimeDelegate
+import com.sun.jersey.server.impl.provider.RuntimeDelegateImpl
+
 class Activator extends BundleActivator {
 
   def registry(ctx: BundleContext) = new ApplicationRegistry {
@@ -49,6 +52,7 @@ class Activator extends BundleActivator {
   }
 
   def start(ctx: BundleContext) {
+    RuntimeDelegate.setInstance(new RuntimeDelegateImpl)
     registration = Some(new RestApplicationRegistration(registry(ctx)))
     implicit val serviceTracker = tracker(ctx, registration.get.collector)
     trackedServices = track[RestRegistrar](ctx, serviceTracker) :: track[FilterRegistrar](ctx, serviceTracker) :: Nil
