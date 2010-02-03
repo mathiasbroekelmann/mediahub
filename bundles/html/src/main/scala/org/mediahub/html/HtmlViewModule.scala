@@ -13,8 +13,6 @@ import scala.xml.NodeSeq
 
 import java.util.Locale
 
-import org.mediahub.resources._
-
 import org.mediahub.web.links.LinkRenderer
 import LinkRenderer._
 
@@ -28,7 +26,7 @@ object XhtmlViews {
   /**
    * Root view classifier for an xhtml content.
    */
-  object xhtml extends ViewClassifier[NodeSeq]
+  object xhtml extends ParamViewClassifier[NodeSeq, java.nio.charset.Charset]
 
   /**
    * render the body tag in an html content

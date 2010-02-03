@@ -18,33 +18,45 @@ import java.lang.reflect.Type
 import org.mediahub.views.{ViewRenderer, ViewClassifier}
 
 import scala.xml.{Xhtml, NodeSeq}
+import Xhtml.toXhtml
+
+import org.mediahub.html.XhtmlViews.xhtml
+
+import java.nio.charset.Charset
 
 /**
  * Uses a provided view renderer to render any kind of object.
  */
 @Provider
 @Produces(Array("application/xhtml+xml;charset=UTF-8", "text/html;charset=UTF-8"))
-abstract class HtmlViewMessageBodyWriter extends MessageBodyWriter[AnyRef] {
+class HtmlViewMessageBodyWriter extends MessageBodyWriter[AnyRef] {
 
   /**
    * define the renderer to use.
    */
-  def renderer: ViewRenderer
+  def renderer: Option[ViewRenderer] = None
+
+  def charset: Charset = Charset.forName(charsetName)
+
+  def charsetName = "UTF-8"
 
   def isWriteable(clazz: Class[_], genericType: Type,
                   annotations: Array[Annotation], mediaType: MediaType): Boolean = true
 
-  def getSize(some: AnyRef, clazz: Class[_], genericType: Type,
+  def getSize(self: AnyRef, clazz: Class[_], genericType: Type,
               annotations: Array[Annotation], mediaType: MediaType): Long = -1L
 
-  def writeTo(some: AnyRef, clazz: Class[_], genericType: Type,
+  def writeTo(self: AnyRef, clazz: Class[_], genericType: Type,
               annotations: Array[Annotation], mediaType: MediaType,
               httpHeaders: MultivaluedMap[String, Object],
               out: OutputStream): Unit = {
-    val root = renderer.render(some) as XhtmlViews.xhtml
-    val xhtmlAsString = Xhtml.toXhtml(root)
-    val writer = new PrintWriter(new OutputStreamWriter(out, "UTF-8"));
-    writer.print(xhtmlAsString)
-    writer.close
+
+    for(someRenderer <- renderer) {
+      val root = someRenderer.render(self) as xhtml withParameter(charset)
+      val xhtmlAsString = toXhtml(root)
+      val writer = new PrintWriter(new OutputStreamWriter(out, charset));
+      writer.print(xhtmlAsString)
+      writer.close
+    }
   }
 }
