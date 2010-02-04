@@ -54,12 +54,6 @@ object BundleResources {
      * create a bundle resource from a bundle context.
      */
     def from(bundleContext: BundleContext): BundleResource = from(bundleContext.getBundle)
-
-    def from(bundleSymbolicName: String) = new {
-      def through(bundle: Bundle) = {
-        bundle.
-      }
-    }
   }
 }
 
