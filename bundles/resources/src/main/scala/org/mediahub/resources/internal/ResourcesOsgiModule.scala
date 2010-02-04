@@ -42,7 +42,6 @@ class ResourcesOsgiModule extends AbstractModule {
   def restRegistrar(bundleResources: Provider[BundleResources]): RestRegistrar = new RestRegistrar {
     def register(registry: RestRegistry) {
       registry.register[BundleResources](bundleResources)
-      registry.register[ResourceMessageBodyWriter]
     }
   }
   
