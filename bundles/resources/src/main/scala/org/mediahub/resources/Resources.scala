@@ -5,17 +5,11 @@
 
 package org.mediahub.resources
 
-import org.osgi.framework.{Bundle, BundleContext}
-
 import org.mediahub.web.links._
 
 import javax.activation.MimeType
-import javax.ws.rs.ext.{Provider, MessageBodyWriter}
-import javax.ws.rs.core.{MediaType, MultivaluedMap}
 
 import java.io.{OutputStream}
-import java.lang.annotation.Annotation
-import java.lang.reflect.Type
 
 import java.io._
 import org.apache.commons.io.output._
@@ -23,59 +17,67 @@ import org.apache.commons.io.output.{ByteArrayOutputStream => ACByteArrayOutputS
 import org.apache.commons.io.IOUtils._
 
 /**
- * Uses a provided view renderer to render any kind of object.
+ * Identifies a resource
  */
-@Provider
-class ResourceMessageBodyWriter extends MessageBodyWriter[ResourceLike] {
+trait Resource {
 
-  def isWriteable(clazz: Class[_], genericType: Type,
-                  annotations: Array[Annotation], mediaType: MediaType): Boolean = true
+  /**
+   * defines the concrete type of the resource
+   */
+  type Self <: Resource
 
-  def getSize(resource: ResourceLike, clazz: Class[_], genericType: Type,
-              annotations: Array[Annotation], mediaType: MediaType): Long = {
-    resource.size
-  }
+  /**
+   * provide the concrete typesafe instance of the resource.
+   */
+  protected def self: Self
 
-  def writeTo(resource: ResourceLike, clazz: Class[_], genericType: Type,
-              annotations: Array[Annotation], mediaType: MediaType,
-              httpHeaders: MultivaluedMap[String, Object],
-              out: OutputStream): Unit = {
-    // TODO: write caching header
-    resource.writeTo(out)
-  }
-}
+  /**
+   * The url of the resource.
+   */
+  def url: java.net.URL
 
-
-trait Resource[A<:ResourceLike] extends ResourceLike {
-
-  def self: A
-
-  def map[B](f: A => B): Option[B] = {
+  /**
+   * transform this resource to something else if it is defined.
+   */
+  def map[B](f: Self => B): Option[B] = {
     if(isDefined) Some(f(self)) else None
   }
 
-  def flatMap[B](f: A => Option[B]): Option[B] = {
+  /**
+   * transform this resource to something else if it is defined.
+   */
+  def flatMap[B](f: Self => Option[B]): Option[B] = {
     if(isDefined) f(self) else None
   }
 
-  def filter(p: A => Boolean): Option[A] = {
+  /**
+   * evaluates given predicate if this resource is defined. if predicate resolves true this is returned.
+   */
+  def filter(p: Self => Boolean): Option[Self] = {
     if(isDefined && p(self)) Some(self) else None
   }
-}
 
-/**
- * A handle for url based resources.
- */
-trait ResourceLike {
-  def url: java.net.URL
-
+  /**
+   * Returns true if the url is defined, otherwise false.
+   */
   def isDefined: Boolean = url != null
 
+  /**
+   * returns the size of the resource
+   */
   def size: Long = {
     writeTo(new CountingOutputStream(NullOutputStream.NULL_OUTPUT_STREAM)).getByteCount
   }
+
+  /**
+   * returns the inputstream of the resource.
+   */
   def inputStream: java.io.InputStream = url.openStream
 
+  /**
+   * write the contents of the resource to the given outputstream.
+   * The given input is returned for convienience.
+   */
   def writeTo[A<:OutputStream](out: A): A = {
     val in = inputStream
     try {
@@ -86,8 +88,14 @@ trait ResourceLike {
     out
   }
 
+  /**
+   * the contents of the resource as a byte array.
+   */
   def bytes: Array[Byte] = writeTo(new ACByteArrayOutputStream).toByteArray
 
+  /**
+   * the string representation of the resource.
+   */
   override def toString = url.toString
 
   /**
@@ -104,4 +112,25 @@ trait ResourceLike {
    * The mimetype if it could be determined
    */
   def mimeType: Option[javax.activation.MimeType] = None
+}
+
+/**
+ * companion object for resources.
+ */
+object Resource {
+
+  /**
+   * implicit conversion of a resource to a StreamingOutput
+   */
+  implicit def resourceToStreamingOutput(resource: Resource) = new javax.ws.rs.core.StreamingOutput {
+    /**
+     * convienience method to create an instanceof javax.ws.rs.core.StreamingOutput
+     */
+    def asStreamingOutput = this
+
+    /**
+     * actually write the resource to the given outputstream
+     */
+    def write(out: OutputStream) = resource.writeTo(out)
+  }
 }

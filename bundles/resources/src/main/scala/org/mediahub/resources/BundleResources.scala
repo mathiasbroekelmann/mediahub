@@ -19,7 +19,8 @@ import Response.Status._
 /**
  * Identifies a bundle resource.
  */
-case class BundleResource(val bundle: Bundle, val location: String) extends Resource[BundleResource] {
+case class BundleResource(val bundle: Bundle, val location: String) extends Resource {
+  type Self = BundleResource
   def self = this
   override def url = bundle.getEntry(location)
   override def toString = "bundle: " + bundle + ", location: " + location
@@ -27,6 +28,9 @@ case class BundleResource(val bundle: Bundle, val location: String) extends Reso
   override def lastModified = Some(bundle.getLastModified)
 }
 
+/**
+ * defines supporting functions for working with bundle resources
+ */
 object BundleResources {
   /**
    * Make a bundle resource from a location in a given bundle.
@@ -40,8 +44,22 @@ object BundleResources {
    *</pre>
    */
   implicit def bundleResource(location: String) = new {
+
+    /**
+     * create a bundle resource from a bundle.
+     */
     def from(bundle: Bundle) = BundleResource(bundle, location)
+
+    /**
+     * create a bundle resource from a bundle context.
+     */
     def from(bundleContext: BundleContext): BundleResource = from(bundleContext.getBundle)
+
+    def from(bundleSymbolicName: String) = new {
+      def through(bundle: Bundle) = {
+        bundle.
+      }
+    }
   }
 }
 
@@ -67,6 +85,8 @@ class BundleResources {
    * @param bundleId the id of the bundle which contains the resource
    * @param location the location inside the bundle of the resource.
    * @param request the request is used to determine if the resource was modified since the last request.
+   *
+   * @return the response containing the StreamingOutput of the resource if it could be found or a response with the http status 404.
    */
   @Path("{bundleId}/{location:.*}")
   @GET
@@ -74,46 +94,77 @@ class BundleResources {
           @PathParam("location") location: String,
           @Context request: Request): Response = {
 
-    // locate the bundle
-    def bundle(bundleId: Long) = {
-      for(bc <- bundleContext;
-          bundle <- Option(bc.getBundle(bundleId)))
-            yield bundle
-    }
-
     /**
      * create a bundle resource.
      */
-    def bundleResource(bundle: Bundle, location: String): BundleResource = {
+    def bundleResource(bundle: Bundle): BundleResource = {
       new BundleResource(bundle, location) {
         override def mimeType = contentTypes.map(ct => new MimeType(ct.contentType(location)))
       }
     }
 
-    // locate the resource
-    def resource = {
-      for(bundle <- bundle(bundleId);
-          resource <- bundleResource(bundle, location))
-            yield (resource)
-    }
-
-    val response = for(someResource <- resource;
-                       lastModified <- someResource.lastModified) yield {
-      val lastModifiedDate = new java.util.Date(lastModified)
-      // check last modified date
-      val builder = request.evaluatePreconditions(lastModifiedDate)
-      if(builder == null) {
-        // resource was modified since last request
-        val entityBuilder = ok(someResource)
-        // use `` here since type is a keyword in scala but is a valid java identifier
-        someResource.mimeType.map(mimeType => entityBuilder.`type`(mimeType.toString)).getOrElse(entityBuilder)
-      } else {
-        // resource was not modified
-        builder.lastModified(lastModifiedDate)
+    /**
+     * locate the resource
+     */
+    def resource: Option[Resource] = {
+      /**
+       * locate the bundle for the given id
+       */
+      def bundle: Option[Bundle] = {
+        bundleContext.flatMap(ctx => Option(ctx.getBundle(bundleId)))
+      }
+      bundle match {
+        case Some(b) => Some(bundleResource(b))
+        case None => None
       }
     }
-    // if resource not found reply with 404 state.
-    response.getOrElse(status(NOT_FOUND)).build
+
+    /**
+     * build the response for a found resource.
+     */
+    def found(resource: Resource): Response = {
+      /**
+       * evaluate conditional request by checking the last modified date.
+       */
+      def evaluatePreconditions(lastModified: java.util.Date): ResponseBuilder = {
+        (Option(request.evaluatePreconditions(lastModified)) match {
+            case Some(rb) => rb
+            case None => ok(resource.asStreamingOutput)
+          }).lastModified(lastModified)
+      }
+
+      /**
+       * use mimetype if defined.
+       */
+      def withMimeType(rb: ResponseBuilder): ResponseBuilder = {
+        resource.mimeType match {
+          case Some(mt) => rb.`type`(mt.toString)
+          case None => rb
+        }
+      }
+
+      /**
+       * evaluate conditional request if the resource defines a last modified date.
+       */
+      val responseBuilder = resource.lastModified match {
+        case Some(date) => evaluatePreconditions(new java.util.Date(date))
+        case None => ok(resource.asStreamingOutput)
+      }
+      
+      withMimeType(responseBuilder).build
+    }
+
+    /**
+     * build the response by verifying that the resource exists.
+     */
+    def respondWith(resource: Option[Resource]): Response = {
+      resource match {
+        case Some(r) => found(r)
+        case None => status(NOT_FOUND).build
+      }
+    }
+    
+    respondWith(resource)
   }
 
 }
