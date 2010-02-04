@@ -29,8 +29,8 @@ class ResourcesOsgiModule extends AbstractModule {
   @Provides
   def bundleResources(ctx: Provider[BundleContext], ct: Provider[ContentTypes]): BundleResources = {
     new BundleResources {
-      override def bundleContext = Some(ctx.get)
-      override def contentTypes = Some(ct.get)
+      override def bundleContext = ctx.get
+      override def contentTypes = ct.get
     }
   }
 

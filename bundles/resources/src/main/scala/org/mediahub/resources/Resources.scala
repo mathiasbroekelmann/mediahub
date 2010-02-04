@@ -16,6 +16,10 @@ import org.apache.commons.io.output._
 import org.apache.commons.io.output.{ByteArrayOutputStream => ACByteArrayOutputStream}
 import org.apache.commons.io.IOUtils._
 
+import javax.ws.rs.core.{Response, Request, Context}
+import Response._
+import Response.Status._
+
 /**
  * Identifies a resource
  */
@@ -132,5 +136,46 @@ object Resource {
      * actually write the resource to the given outputstream
      */
     def write(out: OutputStream) = resource.writeTo(out)
+  }
+
+  /**
+   * build a response for a given resource.
+   */
+  implicit def respond(resource: Resource) = new {
+    /**
+     * build the response for the given request of this resource.
+     */
+    def on(request: Request): ResponseBuilder = {
+      /**
+       * evaluate conditional request by checking the last modified date.
+       */
+      def evaluatePreconditions(lastModified: java.util.Date): ResponseBuilder = {
+        (Option(request.evaluatePreconditions(lastModified)) match {
+            case Some(rb) => rb
+            case None => ok(resource.asStreamingOutput)
+          }).lastModified(lastModified)
+      }
+
+      /**
+       * use mimetype if defined.
+       */
+      def withMimeType(rb: ResponseBuilder): ResponseBuilder = {
+        resource.mimeType match {
+          // since type is a keyword in scala we have to escape it here.
+          case Some(mt) => rb.`type`(mt.toString)
+          case None => rb
+        }
+      }
+
+      /**
+       * evaluate conditional request if the resource defines a last modified date.
+       */
+      val responseBuilder = resource.lastModified match {
+        case Some(date) => evaluatePreconditions(new java.util.Date(date))
+        case None => ok(resource.asStreamingOutput)
+      }
+
+      withMimeType(responseBuilder)
+    }
   }
 }

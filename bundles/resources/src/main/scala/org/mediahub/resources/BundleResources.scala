@@ -9,12 +9,14 @@ import org.osgi.framework.{Bundle, BundleContext}
 
 import org.mediahub.web.links._
 
-import javax.ws.rs.{Path, GET, PathParam}
-import javax.ws.rs.core.{Response, Request, Context}
 import javax.activation.MimeType
 
+import javax.ws.rs.{Path, GET, PathParam}
+import javax.ws.rs.core.{Response, Request, Context}
 import Response._
 import Response.Status._
+
+import Resource._
 
 /**
  * Identifies a bundle resource.
@@ -66,12 +68,12 @@ class BundleResources {
   /**
    * the bundle context is used to determine the bundle for a resource.
    */
-  def bundleContext: Option[BundleContext] = None
+  def bundleContext: BundleContext = error("bundle context is not defined")
 
   /**
    * provide the content types service which is used to determine the content type of a resource
    */
-  def contentTypes: Option[ContentTypes] = None
+  def contentTypes: ContentTypes = error("bundle context is not defined")
 
   /**
    * get the requested resource.
@@ -93,7 +95,7 @@ class BundleResources {
      */
     def bundleResource(bundle: Bundle): BundleResource = {
       new BundleResource(bundle, location) {
-        override def mimeType = contentTypes.map(ct => new MimeType(ct.contentType(location)))
+        override def mimeType = Some(new MimeType(contentTypes.contentType(location)))
       }
     }
 
@@ -101,64 +103,24 @@ class BundleResources {
      * locate the resource
      */
     def resource: Option[Resource] = {
+      
       /**
        * locate the bundle for the given id
        */
       def bundle: Option[Bundle] = {
-        bundleContext.flatMap(ctx => Option(ctx.getBundle(bundleId)))
+        Option(bundleContext.getBundle(bundleId))
       }
+      
       bundle match {
-        case Some(b) => Some(bundleResource(b))
+        case Some(bundle) => Some(bundleResource(bundle))
         case None => None
       }
     }
 
-    /**
-     * build the response for a found resource.
-     */
-    def found(resource: Resource): Response = {
-      /**
-       * evaluate conditional request by checking the last modified date.
-       */
-      def evaluatePreconditions(lastModified: java.util.Date): ResponseBuilder = {
-        (Option(request.evaluatePreconditions(lastModified)) match {
-            case Some(rb) => rb
-            case None => ok(resource.asStreamingOutput)
-          }).lastModified(lastModified)
-      }
-
-      /**
-       * use mimetype if defined.
-       */
-      def withMimeType(rb: ResponseBuilder): ResponseBuilder = {
-        resource.mimeType match {
-          case Some(mt) => rb.`type`(mt.toString)
-          case None => rb
-        }
-      }
-
-      /**
-       * evaluate conditional request if the resource defines a last modified date.
-       */
-      val responseBuilder = resource.lastModified match {
-        case Some(date) => evaluatePreconditions(new java.util.Date(date))
-        case None => ok(resource.asStreamingOutput)
-      }
-      
-      withMimeType(responseBuilder).build
+    resource match {
+      case Some(resource) if resource.isDefined => resource on(request) build
+      case _ => status(NOT_FOUND).build
     }
-
-    /**
-     * build the response by verifying that the resource exists.
-     */
-    def respondWith(resource: Option[Resource]): Response = {
-      resource match {
-        case Some(r) => found(r)
-        case None => status(NOT_FOUND).build
-      }
-    }
-    
-    respondWith(resource)
   }
 
 }
