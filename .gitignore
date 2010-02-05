@@ -5,3 +5,7 @@ target
 .scala_dependencies
 .settings
 .springBeans
+*.iml
+*.ipr
+*.ipw
+*.iws
