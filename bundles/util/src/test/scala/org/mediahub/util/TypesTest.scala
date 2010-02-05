@@ -17,14 +17,14 @@ class TypesTest {
 
   @Test
   def testTypesWithRootClass {
-    val actual = typesOf(classOf[WithRootClass]).toList
+    val actual = (classOf[WithRootClass] hierarchy).toList
     val expected = List[Class[_]](classOf[WithRootClass], classOf[Root], classOf[ScalaObject], classOf[ParentClass], classOf[Parent], classOf[Object])
     assertThat(actual, is(expected))
   }
 
   @Test
   def testTypesWithSubClass {
-    val actual = typesOf(classOf[WithSubClass]).toList
+    val actual = (classOf[WithSubClass] hierarchy) toList
     val expected = List[Class[_]](classOf[WithSubClass], classOf[Sub], classOf[Root], classOf[ScalaObject], classOf[ParentClass], classOf[Parent], classOf[Object])
     assertThat(actual, is(expected))
   }
