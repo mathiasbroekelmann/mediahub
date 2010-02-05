@@ -42,7 +42,7 @@ object BundleResources {
    * import org.mediahub.resources.BundleResources._
    *
    * def bundle = ...
-   * def resource = "/path/to/resource.ext" from bundle
+   * def resource = "/path/to/resource.ext" in bundle
    *</pre>
    */
   implicit def bundleResource(location: String) = new {
@@ -50,12 +50,12 @@ object BundleResources {
     /**
      * create a bundle resource from a bundle.
      */
-    def from(bundle: Bundle) = BundleResource(bundle, location)
+    def in(bundle: Bundle) = BundleResource(bundle, location)
 
     /**
      * create a bundle resource from a bundle context.
      */
-    def from(bundleContext: BundleContext): BundleResource = from(bundleContext.getBundle)
+    def in(bundleContext: BundleContext): BundleResource = in(bundleContext.getBundle)
   }
 }
 
