@@ -11,8 +11,6 @@ import org.hamcrest.CoreMatchers._
 
 import Types._
 
-import com.google.inject.util.Types.newParameterizedType
-
 class TypesTest {
 
   @Test
