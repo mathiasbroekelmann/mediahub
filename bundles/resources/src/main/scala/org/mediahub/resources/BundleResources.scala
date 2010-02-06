@@ -22,12 +22,13 @@ import Resource._
  * Identifies a bundle resource.
  */
 case class BundleResource(val bundle: Bundle, val location: String) extends Resource {
-  type Self = BundleResource
-  def self = this
   override def url = bundle.getEntry(location)
+  def uri = url.toURI
+  def name = location.split('/').last
   override def toString = "bundle: " + bundle + ", location: " + location
   // TODO: find a way to determine the last modified date of the resource in the bundle
   override def lastModified = Some(bundle.getLastModified)
+  def exists = bundle.getEntry(location) != null
 }
 
 /**
@@ -118,7 +119,7 @@ class BundleResources {
     }
 
     resource match {
-      case Some(resource) if resource.isDefined => resource on(request) build
+      case Some(resource) if resource.exists => resource on(request) build
       case _ => status(NOT_FOUND).build
     }
   }
@@ -133,10 +134,12 @@ class BundleResourceLinkResolver extends LinkResolver[BundleResource] {
   /**
    * if the resource exists a link will be build for it.
    */
-  def apply(target: BundleResource, builder: ResourceLinkBuilder): Option[LinkBuilder] = {
-    for(resource <- target) yield {
+  def apply(resource: BundleResource, builder: ResourceLinkBuilder): Option[LinkBuilder] = {
+    if(resource.exists) {
       val bundleId = long2Long(resource.bundle.getBundleId)
-      builder.resolvedBy[BundleResources].action("get", bundleId, resource.location)
+      Some(builder.resolvedBy[BundleResources].action("get", bundleId, resource.location))
+    } else {
+      None
     }
   }
 }

@@ -9,9 +9,8 @@ import org.mediahub.web.links._
 
 import javax.activation.MimeType
 
-import java.io.{OutputStream}
-
 import java.io._
+import java.net.{URI, URL}
 import org.apache.commons.io.output._
 import org.apache.commons.io.output.{ByteArrayOutputStream => ACByteArrayOutputStream}
 import org.apache.commons.io.IOUtils._
@@ -20,51 +19,45 @@ import javax.ws.rs.core.{Response, Request, Context}
 import Response._
 import Response.Status._
 
+trait ResourceLike {
+
+  type Parent
+
+  /**
+   * optionally provide the parent.
+   */
+  def parent: Option[Parent] = None
+
+  /**
+   * Provide the uri to identify this resource.
+   */
+  def uri: URI
+  
+  /**
+   * the name of the resource.
+   */
+  def name: String
+
+  /**
+   * returns true if the resource exists
+   */
+  def exists: Boolean
+
+  /**
+   * the url of the resource
+   */
+  def url: URL = uri.toURL
+
+  /**
+   * optionally provide the time in millis since 1st jan 1970 when this resource was last modified.
+   */
+  def lastModified: Option[Long] = None
+}
+
 /**
  * Identifies a resource
  */
-trait Resource {
-
-  /**
-   * defines the concrete type of the resource
-   */
-  type Self <: Resource
-
-  /**
-   * provide the concrete typesafe instance of the resource.
-   */
-  protected def self: Self
-
-  /**
-   * The url of the resource.
-   */
-  def url: java.net.URL
-
-  /**
-   * transform this resource to something else if it is defined.
-   */
-  def map[B](f: Self => B): Option[B] = {
-    if(isDefined) Some(f(self)) else None
-  }
-
-  /**
-   * transform this resource to something else if it is defined.
-   */
-  def flatMap[B](f: Self => Option[B]): Option[B] = {
-    if(isDefined) f(self) else None
-  }
-
-  /**
-   * evaluates given predicate if this resource is defined. if predicate resolves true this is returned.
-   */
-  def filter(p: Self => Boolean): Option[Self] = {
-    if(isDefined && p(self)) Some(self) else None
-  }
-
-  /**
-   * Returns true if the url is defined, otherwise false.
-   */
-  def isDefined: Boolean = url != null
+trait Resource extends ResourceLike {
 
   /**
    * returns the size of the resource
@@ -98,24 +91,23 @@ trait Resource {
   def bytes: Array[Byte] = writeTo(new ACByteArrayOutputStream).toByteArray
 
   /**
-   * the string representation of the resource.
-   */
-  override def toString = url.toString
-
-  /**
-   * provide the last modified time in millis if possible
-   */
-  def lastModified: Option[Long] = None
-
-  /**
-   * Provide the uri to identify this resource.
-   */
-  def uri: java.net.URI = url.toURI
-
-  /**
    * The mimetype if it could be determined
    */
   def mimeType: Option[javax.activation.MimeType] = None
+}
+
+/**
+ * just a container which has childs
+ */
+trait Container extends ResourceLike {
+
+  type Element
+  type Repr <: Traversable[Element]
+
+  /**
+   * provide the childs of this container
+   */
+  def childs: Repr
 }
 
 /**
