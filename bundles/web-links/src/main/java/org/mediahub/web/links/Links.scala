@@ -12,8 +12,6 @@ import scala.collection.JavaConversions._
 
 import scala.reflect.ClassManifest._
 
-import java.lang.reflect.{ParameterizedType}
-
 /**
  * a link renderer provides entry methods to render links.
  */
@@ -99,25 +97,6 @@ trait LinkContext {
         baseUri[A]
         .map(UriBuilder.fromUri(_)))
     }
-  }
-}
-
-object LinkContext {
-  /**
-   * collect all elements in the given list by the given filter.
-   * use this if you have an service interface which defines generic type parameters and
-   * implementations for certain type definitions of that generic types.
-   * you can filter that list for specific types to collect the services whose generic type definitions passes the given matcher.
-   */
-  def typeOf[A<:AnyRef,B<:A](input: Iterable[A], clazz: Class[B], genericType: Class[_]): Iterable[B] = {
-    for(element <- input;
-        if element.isInstanceOf[B];
-        itf <- element.asInstanceOf[B].getClass.getGenericInterfaces;
-        if itf.isInstanceOf[ParameterizedType];
-        pt <- Seq(itf.asInstanceOf[ParameterizedType]);
-        if pt.getRawType == clazz;
-        if pt.getActualTypeArguments()(0).asInstanceOf[Class[_]].isAssignableFrom(genericType))
-          yield element.asInstanceOf[B]
   }
 }
 
