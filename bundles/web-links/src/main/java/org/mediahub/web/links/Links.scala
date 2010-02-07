@@ -79,11 +79,10 @@ trait LinkContext {
   /**
    * Provide the list of all available link resolvers.
    */
-  def resolver: Iterable[LinkResolver[_]] = Iterable.empty
+  def resolver: Traversable[LinkResolver[_]] = Traversable.empty
 
   /**
    * Get all link resolvers that can handle the defined class type.
-   * TODO: find a way to order the resolvers.
    * TODO: extract the implementation to type since the resolving of implemntation services this way is quite common.
    */
   def resolverFor[A<:AnyRef](implicit originClazz: ClassManifest[A]): Traversable[LinkResolver[A]] = {
