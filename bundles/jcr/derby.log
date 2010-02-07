@@ -1,0 +1,240 @@
+----------------------------------------------------------------
+2010-02-07 16:48:12.855 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance a816c00e-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/version/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2010-02-07 16:48:18.923 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance ac3880cc-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/workspaces/default/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2010-02-07 16:48:25.134 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 45ee0190-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/workspaces/security/db  
+
+Database Class Loader started - derby.database.classpath=''
+
+2010-02-07 16:48:31.828 GMT:
+Shutting down instance ac3880cc-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+
+2010-02-07 16:48:32.226 GMT:
+Shutting down instance 45ee0190-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+
+2010-02-07 16:48:32.585 GMT:
+Shutting down instance a816c00e-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+----------------------------------------------------------------
+2010-02-07 16:48:32.733 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 34cc0261-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/version/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2010-02-07 16:48:32.908 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 8bf5427a-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/workspaces/default/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2010-02-07 16:48:33.224 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 73bac293-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/workspaces/security/db  
+
+Database Class Loader started - derby.database.classpath=''
+
+2010-02-07 16:48:33.407 GMT:
+Shutting down instance 8bf5427a-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+
+2010-02-07 16:48:33.412 GMT:
+Shutting down instance 73bac293-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+
+2010-02-07 16:48:33.416 GMT:
+Shutting down instance 34cc0261-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+----------------------------------------------------------------
+2010-02-07 16:48:33.615 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance deca02b0-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/version/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2010-02-07 16:48:33.815 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance f7e102c9-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/workspaces/default/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2010-02-07 16:48:34.154 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 919442e2-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/workspaces/security/db  
+
+Database Class Loader started - derby.database.classpath=''
+
+2010-02-07 16:48:34.272 GMT:
+Shutting down instance f7e102c9-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+
+2010-02-07 16:48:34.288 GMT:
+Shutting down instance 919442e2-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+
+2010-02-07 16:48:34.291 GMT:
+Shutting down instance deca02b0-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+----------------------------------------------------------------
+2010-02-07 16:48:34.431 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 3be3c2fb-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/version/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2010-02-07 16:48:34.581 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 86cf8314-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/workspaces/default/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2010-02-07 16:48:34.789 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 0257832d-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/workspaces/security/db  
+
+Database Class Loader started - derby.database.classpath=''
+
+2010-02-07 16:48:34.882 GMT:
+Shutting down instance 86cf8314-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+
+2010-02-07 16:48:34.888 GMT:
+Shutting down instance 0257832d-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+
+2010-02-07 16:48:34.891 GMT:
+Shutting down instance 3be3c2fb-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+----------------------------------------------------------------
+2010-02-07 16:48:35.064 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 3e7bc346-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/version/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2010-02-07 16:48:35.214 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance cb3c435f-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/workspaces/default/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2010-02-07 16:48:35.463 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 38990378-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/workspaces/security/db  
+
+Database Class Loader started - derby.database.classpath=''
+
+2010-02-07 16:48:35.554 GMT:
+Shutting down instance cb3c435f-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+
+2010-02-07 16:48:35.558 GMT:
+Shutting down instance 38990378-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+
+2010-02-07 16:48:35.561 GMT:
+Shutting down instance 3e7bc346-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+----------------------------------------------------------------
+2010-02-07 16:48:35.707 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 16920391-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/version/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2010-02-07 16:48:35.865 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance f52743aa-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/workspaces/default/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2010-02-07 16:48:36.065 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 6458c3c3-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/workspaces/security/db  
+
+Database Class Loader started - derby.database.classpath=''
+
+2010-02-07 16:48:36.135 GMT:
+Shutting down instance f52743aa-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+
+2010-02-07 16:48:36.138 GMT:
+Shutting down instance 6458c3c3-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+
+2010-02-07 16:48:36.142 GMT:
+Shutting down instance 16920391-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+----------------------------------------------------------------
+2010-02-07 16:48:36.306 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance f42683dc-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/version/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2010-02-07 16:48:36.473 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 349083f5-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/workspaces/default/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2010-02-07 16:48:36.664 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance b596c40e-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/workspaces/security/db  
+
+Database Class Loader started - derby.database.classpath=''
+
+2010-02-07 16:48:36.773 GMT:
+Shutting down instance 349083f5-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+
+2010-02-07 16:48:36.777 GMT:
+Shutting down instance b596c40e-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+
+2010-02-07 16:48:36.779 GMT:
+Shutting down instance f42683dc-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+----------------------------------------------------------------
+2010-02-07 16:48:36.947 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 8ccb8434-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/version/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2010-02-07 16:48:37.099 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 0f5b844d-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/workspaces/default/db  
+
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+2010-02-07 16:48:37.332 GMT:
+ Booting Derby version The Apache Software Foundation - Apache Derby - 10.5.3.0 - (802917): instance 5287c466-0126-a954-cf76-0000040d8ba8
+on database directory /home/mathias/projects/mediahub/bundles/jcr/target/jcr/workspaces/security/db  
+
+Database Class Loader started - derby.database.classpath=''
+
+2010-02-07 16:48:37.404 GMT:
+Shutting down instance 0f5b844d-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+
+2010-02-07 16:48:37.407 GMT:
+Shutting down instance 5287c466-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
+
+2010-02-07 16:48:37.411 GMT:
+Shutting down instance 8ccb8434-0126-a954-cf76-0000040d8ba8
+----------------------------------------------------------------
