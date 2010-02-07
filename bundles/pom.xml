@@ -24,7 +24,6 @@
     <!--    <module>jackson</module>-->
     <module>album</module>
     <module>page</module>
-    <module>media</module>
     <module>persistence</module>
     <module>validation</module>
     <!--    <module>org.dynamicjava.jpa</module>-->
