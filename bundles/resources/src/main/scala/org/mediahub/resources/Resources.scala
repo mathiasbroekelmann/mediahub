@@ -73,6 +73,15 @@ trait Resource extends ResourceLike {
    */
   def inputStream: java.io.InputStream = url.openStream
 
+  def read[A](f: (java.io.InputStream => A)): A = {
+    val in = inputStream
+    try {
+      f(in)
+    } finally {
+      in.close
+    }
+  }
+
   /**
    * write the contents of the resource to the given outputstream.
    * The given input is returned for convienience.
