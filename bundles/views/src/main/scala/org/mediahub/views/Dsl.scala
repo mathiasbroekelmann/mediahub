@@ -51,7 +51,7 @@ trait Classifier[A] {
  * Common view classifier. Identifies a view.
  * type A defines the output of the view (String, NodeSeq, ...)
  */
-abstract case class ViewClassifier[A](implicit clazz: ClassManifest[A]) extends Classifier[A] {
+abstract class ViewClassifier[A](implicit clazz: ClassManifest[A]) extends Classifier[A] {
   val resultType = clazz.erasure.asInstanceOf[Class[A]]
 }
 
@@ -60,7 +60,7 @@ abstract case class ViewClassifier[A](implicit clazz: ClassManifest[A]) extends 
  * type A defines the output of the view (String, NodeSeq, ...)
  * type B defines the view parameters type(s).
  */
-abstract case class ParamViewClassifier[A, B](implicit clazz: ClassManifest[A]) extends Classifier[A] {
+abstract class ParamViewClassifier[A, B](implicit clazz: ClassManifest[A]) extends Classifier[A] {
   val resultType = clazz.erasure.asInstanceOf[Class[A]]
 }
 
