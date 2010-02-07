@@ -1,0 +1,22 @@
+#--------------------------------------------------------------------------
+# Use this file to add customized Bnd instructions for the wrapped library
+#--------------------------------------------------------------------------
+
+#
+# this unpacks the contents of the wrapped jar artifact inside the bundle
+# to also inline dependencies of this artifact add Embed-Transitive: true
+#
+Embed-Dependency: *;scope=compile|runtime;type=!pom;inline=true
+
+#Embed-Transitive: true
+
+Import-Package: \
+ !org.apache.jackrabbit.test,\
+ org.apache.tika.*;resolution:=optional,\
+ org.apache.derby.jdbc;resolution:=optional,\
+ javax.swing.*;resolution:=optional,\
+ *
+
+Private-Package: org.apache.jackrabbit.core.*
+
+Export-Package: org.apache.jackrabbit.core.api.*;version=2.0

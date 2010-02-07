@@ -38,6 +38,9 @@
     <module>cache</module>
     <module>html</module>
     <module>resources</module>
+    <module>image</module>
+    <module>jcr</module>
+    <module>org.apache.jackrabbit.core</module>
   </modules>
 
 </project>
