@@ -18,6 +18,7 @@ import org.mediahub.resources._
 import Filesystem._
 
 import org.apache.sanselan._
+import org.apache.sanselan.common._
 
 /**
  * scan a directory recursivly
@@ -37,7 +38,7 @@ class ImagesTest {
 
   @Test
   def example {
-    for(image <- imagesRecursively(new File("/media/fotos"))) {
+    for(image <- imagesRecursively(new File("/media/fotos/2010"))) {
       val time = System.currentTimeMillis
       println(image + ", time taken: " + (System.currentTimeMillis - time) + " ms")
     }
@@ -56,22 +57,10 @@ class ImagesTest {
       val in = res.inputStream
       try {
         Some(new Image {
-            def withBufferedImage[A](f: java.awt.image.BufferedImage => A) = {
-              val bImage = javax.imageio.ImageIO.read(res.inputStream)
-              try {
-                f(bImage)
-              } finally {
-                bImage.flush
-              }
-            }
-
             lazy val dimension: (Int, Int) = {
-              val in = res.inputStream
-              try {
-                val info = Sanselan.getImageInfo(res.inputStream, res.uri.toString)
+              res.read { in =>
+                val info = Sanselan.getImageInfo(in, res.uri.toString)
                 (info.getWidth, info.getHeight)
-              } finally {
-                in.close
               }
             }
             
@@ -100,4 +89,20 @@ trait Image {
   def resource: Resource
   def width: Int
   def height: Int
+}
+
+import org.apache.sanselan.formats.tiff.constants.TiffTagConstants
+import org.apache.sanselan.formats.jpeg.JpegImageMetadata
+
+object RichSanselan {
+  implicit def metadataToRichMetadata(meta: IImageMetadata) = new {
+
+    def resolution = meta match {
+      case jpeg: JpegImageMetadata => jpeg.findEXIFValue(TiffTagConstants.TIFF_TAG_XRESOLUTION)
+    }
+
+    def date = meta match {
+      case jpeg: JpegImageMetadata => jpeg.findEXIFValue(TiffTagConstants.TIFF_TAG_XRESOLUTION)
+    }
+  }
 }
