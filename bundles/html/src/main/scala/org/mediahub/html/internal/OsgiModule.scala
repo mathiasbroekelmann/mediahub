@@ -10,10 +10,8 @@ import scala.xml.NodeSeq
 import com.google.inject._
 
 import org.ops4j.peaberry._
-import builders._
 import Peaberry._
 import org.ops4j.peaberry.util._
-import Attributes._
 import TypeLiterals._
 
 import java.util.Locale
@@ -23,6 +21,7 @@ import org.mediahub.views.{CustomizableViewRenderer, ViewRenderer}
 import org.mediahub.html._
 
 import org.mediahub.rest.{RestRegistrar, RestRegistry}
+import org.osgi.framework.Bundle
 
 class OsgiModule extends AbstractModule {
 
@@ -45,10 +44,12 @@ class OsgiModule extends AbstractModule {
 
   @Provides
   def htmlViewModule(rendererProvider: Provider[ViewRenderer],
-                     @Context contextLocale: Provider[Locale]): HtmlViewModule = {
+                     @Context contextLocale: Provider[Locale],
+                     myBundle: Bundle): HtmlViewModule = {
     new HtmlViewModule {
       def renderer = rendererProvider.get
       def locale = contextLocale.get
+      def bundle = myBundle
     }
   }
 

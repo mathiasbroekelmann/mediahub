@@ -6,21 +6,15 @@
 package org.mediahub.html
 
 import org.mediahub.views._
-import org.mediahub.web.links._
-
-import com.google.inject.{Inject, Provider}
-
 import scala.xml.NodeSeq
 
-import java.util.Locale
-
 import org.mediahub.web.links.LinkRenderer
-import LinkRenderer._
 
-import org.osgi.framework.{Bundle, BundleContext}
+import org.mediahub.resources.BundleResources._
+import org.osgi.framework.Bundle
 
-case class Xml extends ViewClassifier[NodeSeq]
-case class Text extends ViewClassifier[String]
+abstract class Xml extends ViewClassifier[NodeSeq]
+abstract class Text extends ViewClassifier[String]
 
 object XhtmlViews {
   
@@ -79,11 +73,14 @@ trait ViewRendererProxy extends ViewRenderer {
   override def render(bean: Any) = renderer.render(bean)
 }
 
+/**
+ * defines function for use in xml
+ *
+ * TODO: move to util module
+ */
 object Xml {
   implicit def optionOfStringToOptionOfText(value: Option[String]) = value.map(scala.xml.Text(_))
 }
-
-import Xml._
 
 /**
  * define the core views for rendering html content.
@@ -92,9 +89,11 @@ abstract class HtmlViewModule extends ViewModule with ViewRendererProxy with Lin
 
   import XhtmlViews._
 
-  def locale: Locale
-  
+  def locale: java.util.Locale
+
   def lang = locale.getLanguage
+
+  def bundle: Bundle
 
   def configure(binder: ViewBinder) {
     import binder._
@@ -127,26 +126,7 @@ abstract class HtmlViewModule extends ViewModule with ViewRendererProxy with Lin
     }
 
     bindView(references).of[Any] to { self =>
-      for(reference <- referencesFor(self))
-        yield render(reference) as referenceInHtmlHead
-    }
-
-    bindView(referenceInHtmlHead).of[HtmlHeadLink] to { self =>
-      import self._
-        <link rel={rel} href={linkTo(resource)} type={resource.mimeType.map(_.toString)} title={title} />
-    }
-    
-    def referencesFor(self: Any): Seq[Any] = {
-      // TODO resolve referenced resources of self.
-      Seq.empty
+      <link rel="stylesheet" type="text/css" href={"/css/styles.css" in bundle} />
     }
   }
-}
-
-import org.mediahub.resources.Resource
-
-trait HtmlHeadLink {
-  def rel: String
-  def resource: Resource
-  def title: Option[String]
 }
