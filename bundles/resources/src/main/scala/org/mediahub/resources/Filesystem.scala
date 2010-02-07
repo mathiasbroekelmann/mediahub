@@ -38,7 +38,7 @@ trait FilesystemResource extends ResourceLike {
 case class DirectoryResource(val file: File) extends FilesystemResource with Container {
 
   type Element = ResourceLike
-  type Repr = Iterable[ResourceLike]
+  type Repr = Traversable[ResourceLike]
 
   /**
    * return all childs of this directory including files and nested directory. this method is not recursive.
