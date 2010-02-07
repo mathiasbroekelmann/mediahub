@@ -12,6 +12,8 @@ import scala.collection.JavaConversions._
 
 import scala.reflect.ClassManifest._
 
+import org.mediahub.util.Types._
+
 /**
  * a link renderer provides entry methods to render links.
  */
@@ -82,10 +84,17 @@ trait LinkContext {
   /**
    * Get all link resolvers that can handle the defined class type.
    * TODO: find a way to order the resolvers.
+   * TODO: extract the implementation to type since the resolving of implemntation services this way is quite common.
    */
-  def resolverFor[A<:AnyRef](implicit clazz: ClassManifest[A]): Iterable[LinkResolver[A]] = {
-    val myclass = clazz.erasure
-    LinkContext.typeOf(resolver, classOf[LinkResolver[A]], myclass)
+  def resolverFor[A<:AnyRef](implicit originClazz: ClassManifest[A]): Traversable[LinkResolver[A]] = {
+    val hierarchy = originClazz.erasure.asInstanceOf[Class[A]].hierarchy[A]
+    val result = (for(clazz <- hierarchy.view) yield {
+      // create the generic type for the current class like LinkResolver[class]
+      val genericType = classOf[LinkResolver[_]] withTypeArguments clazz
+      // filter all link resolvers which can work on the given generic type
+      resolver.flatMap(implementedFor[LinkResolver[A]](genericType))
+    }).flatten
+    result
   }
 
   /**

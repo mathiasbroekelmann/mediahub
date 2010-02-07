@@ -66,14 +66,6 @@ class LinksTest {
     println(link)
     assertThat(link, is("/context/root/foo/baz"))
   }
-
-  @Test
-  def testResolveGenericType {
-    val resolver = Seq(new SomeLinkResolver, new SomeOtherLinkResolver, new AnyRefLinkResolver)
-    val validResolvers = LinkContext.typeOf(resolver, classOf[LinkResolver[_]], fromClass(classOf[MySubResource]).erasure)
-
-    println("resolvers: " + validResolvers)
-  }
 }
 
 class AnyRefLinkResolver extends LinkResolver[AnyRef] {
