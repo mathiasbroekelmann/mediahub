@@ -14,11 +14,5 @@ import org.osgi.framework._
  */
 class AlbumOsgiModule extends AbstractModule {
     def configure {
-        val clazz = classOf[AlbenOperations]
-        val props = names("service.exported.interfaces=%s".format(clazz.getName), 
-                          "service.exported.configs=org.apache.cxf.rs",
-                          "org.apache.cxf.rs.httpservice.context=/dali/alben")
-        val provider = service(classOf[Alben]).attributes(props).export
-        bind(export(clazz)).toProvider(provider)
     }
 }
