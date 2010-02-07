@@ -19,6 +19,8 @@ import javax.ws.rs.core.{Response, Request, Context}
 import Response._
 import Response.Status._
 
+import org.mediahub.util.Dates._
+
 trait ResourceLike {
 
   type Parent
@@ -36,7 +38,7 @@ trait ResourceLike {
   /**
    * the name of the resource.
    */
-  def name: String
+  def name: String = uri.getPath.split('/').last
 
   /**
    * returns true if the resource exists
@@ -51,7 +53,7 @@ trait ResourceLike {
   /**
    * optionally provide the time in millis since 1st jan 1970 when this resource was last modified.
    */
-  def lastModified: Option[Long] = None
+  def lastModified: Option[Long]
 }
 
 /**
@@ -134,6 +136,7 @@ object Resource {
    * build a response for a given resource.
    */
   implicit def respond(resource: Resource) = new {
+
     /**
      * build the response for the given request of this resource.
      */
@@ -163,7 +166,7 @@ object Resource {
        * evaluate conditional request if the resource defines a last modified date.
        */
       val responseBuilder = resource.lastModified match {
-        case Some(date) => evaluatePreconditions(new java.util.Date(date))
+        case Some(millis) => evaluatePreconditions(millis)
         case None => ok(resource.asStreamingOutput)
       }
 

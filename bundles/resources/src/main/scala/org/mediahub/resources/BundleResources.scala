@@ -24,7 +24,6 @@ import Resource._
 case class BundleResource(val bundle: Bundle, val location: String) extends Resource {
   override def url = bundle.getEntry(location)
   def uri = url.toURI
-  def name = location.split('/').last
   override def toString = "bundle: " + bundle + ", location: " + location
   // TODO: find a way to determine the last modified date of the resource in the bundle
   override def lastModified = Some(bundle.getLastModified)
@@ -127,12 +126,12 @@ class BundleResources {
 }
 
 /**
- * a link resolver for bundle resources
+ * A link resolver for bundle resources.
  */
 class BundleResourceLinkResolver extends LinkResolver[BundleResource] {
 
   /**
-   * if the resource exists a link will be build for it.
+   * If the resource exists a link will be build for it.
    */
   def apply(resource: BundleResource, builder: ResourceLinkBuilder): Option[LinkBuilder] = {
     if(resource.exists) {

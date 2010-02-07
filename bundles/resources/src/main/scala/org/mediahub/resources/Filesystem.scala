@@ -28,9 +28,8 @@ trait FilesystemResource extends ResourceLike {
 
   def uri = file.toURI
   def exists = file.exists
-  def name = file.getName
   override def parent = Option(file.getParentFile).map(new DirectoryResource(_))
-  override def lastModified = if(exists) Some(file.lastModified) else None
+  override def lastModified = if(exists && file.lastModified >= 0) Some(file.lastModified) else None
 }
 
 /**
