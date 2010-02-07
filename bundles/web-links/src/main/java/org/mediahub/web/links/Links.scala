@@ -88,11 +88,11 @@ trait LinkContext {
   def resolverFor[A<:AnyRef](implicit originClazz: ClassManifest[A]): Traversable[LinkResolver[A]] = {
     val hierarchy = originClazz.erasure.asInstanceOf[Class[A]].hierarchy[A]
     val result = (for(clazz <- hierarchy.view) yield {
-      // create the generic type for the current class like LinkResolver[class]
-      val genericType = classOf[LinkResolver[_]] withTypeArguments clazz
-      // filter all link resolvers which can work on the given generic type
-      resolver.flatMap(implementedFor[LinkResolver[A]](genericType))
-    }).flatten
+        // create the generic type for the current class like LinkResolver[class]
+        val genericType = classOf[LinkResolver[_]] withTypeArguments clazz
+        // filter all link resolvers which can work on the given generic type
+        resolver.flatMap(implementedFor[LinkResolver[A]](genericType))
+      }).flatten
     result
   }
 
@@ -180,7 +180,8 @@ trait UriBuilderChain {
    *
    * @return the build uri. This might be none if the uri could not be build for any reason.
    */
-  def apply(builder: Option[UriBuilder], params: (String, AnyRef)*): Option[URI] = apply(builder, Map.empty ++ params)
+  def apply(builder: Option[UriBuilder], params: (String, AnyRef), moreParams: (String, AnyRef)*): Option[URI] =
+    apply(builder, Map.empty ++ (params +: moreParams))
 
 }
 
@@ -254,7 +255,7 @@ trait ResourceLinkBuilder extends FragmentLinkBuilder {
 }
 
 class FragmentLinkBuilderImpl[A](builders: Seq[UriPartBuilder]) extends LinkBuilderImpl(builders)
-                                                                with FragmentLinkBuilder {
+                                                                   with FragmentLinkBuilder {
 
   def fragment(fragment: String): LinkBuilder = {
     def part = new UriPartBuilder {
@@ -270,7 +271,7 @@ class ResourceActionLinkBuilderImpl[A](context: LinkContext,
                                        builders: Seq[UriPartBuilder],
                                        clazz: Class[A]) extends ResourceLinkBuilderImpl(context,
                                                                                         builders)
-                                                        with ResourceActionLinkBuilder[A] {
+                                                           with ResourceActionLinkBuilder[A] {
   def action(call: (A => Any)): ResourceLinkBuilder = {
     // TODO: implement proxy based method invokation to action call
     error("not yet implemented")
@@ -278,25 +279,25 @@ class ResourceActionLinkBuilderImpl[A](context: LinkContext,
 
   def action(methodName: String, params: Map[String, AnyRef]): ResourceLinkBuilder = {
     val method = clazz.getMethods
-                      .find(_.getName == methodName)
-                      .getOrElse(error("could not find method with name %s in class %s".format(methodName, clazz)))
+    .find(_.getName == methodName)
+    .getOrElse(error("could not find method with name %s in class %s".format(methodName, clazz)))
     val pathParamNames = for(paramAnnotations <- method.getParameterAnnotations;
                              a <- paramAnnotations;
                              if(a.isInstanceOf[PathParam]))
-                         yield (a.asInstanceOf[PathParam].value)
+                               yield (a.asInstanceOf[PathParam].value)
     val pathParams = Map.empty ++ params.filterKeys(pathParamNames.contains(_))
     val queryParamNames = for(paramAnnotations <- method.getParameterAnnotations;
                               a <- paramAnnotations;
                               if(a.isInstanceOf[QueryParam]))
-                          yield (a.asInstanceOf[QueryParam].value)
+                                yield (a.asInstanceOf[QueryParam].value)
     val queryParams = params.filterKeys(queryParamNames.contains(_))
     def path = new UriPartBuilder {
       def apply(uriBuilder: Option[UriBuilder], chain: UriBuilderChain): Option[URI] = {
         val myUriBuilder = uriBuilder.map(b => {
             queryParamNames.foldLeft(b)((builder, name) =>
               params.get(name)
-                    .map(builder.queryParam(name, _))
-                    .getOrElse(builder))
+              .map(builder.queryParam(name, _))
+              .getOrElse(builder))
           })
         chain(myUriBuilder.map(_.path(method)), pathParams)
       }
@@ -312,7 +313,7 @@ class ResourceActionLinkBuilderImpl[A](context: LinkContext,
 
 class ResourceLinkBuilderImpl(context: LinkContext,
                               builders: Seq[UriPartBuilder]) extends FragmentLinkBuilderImpl(builders)
-                                                             with ResourceLinkBuilder {
+                                                                with ResourceLinkBuilder {
   def this(context: LinkContext) = this(context, Seq.empty)
 
   def resolvedBy[A<:AnyRef](implicit clazz: ClassManifest[A]): ResourceActionLinkBuilder[A] = {
@@ -351,24 +352,37 @@ class ResourceLinkBuilderImpl(context: LinkContext,
   }
 
   def instanceBuilder[A<:AnyRef](instance: A) = {
-    val clazz = instance.getClass
-    val calzzManifest = fromClass(clazz).asInstanceOf[ClassManifest[A]]
     new UriPartBuilder {
       def apply(builder: Option[UriBuilder], chain: UriBuilderChain): Option[URI] = {
+
+        /**
+         * the fallback uses the link resolvers to compute the base uri.
+         */
         def fallback: Option[URI] = {
-          def linkBuilder = new ResourceLinkBuilderImpl(context, Seq.empty)
-          val start: Option[LinkBuilder] = None
-          val resolvers = context.resolverFor(calzzManifest)
-          val resolvedLinkBuilder = resolvers.foldLeft(start)((current, resolve) => current.orElse(resolve(instance, linkBuilder)))
-                                             .getOrElse(error(format("Could not determine uri for %s", instance)))
-          resolvedLinkBuilder.build.flatMap(uri => chain(Some(UriBuilder.fromUri(uri))))
+          // the link builder is used as a parameter to the link resolver
+          lazy val linkBuilderTemplate = new ResourceLinkBuilderImpl(context, Seq.empty)
+
+          // resolves the link builder by using the first element of the given traversable
+          // if that resolver does not compute a valid link builder the next link resolver in the traversable is used and so on
+          // if no link resolver creates a valid link builder None is returned.
+          def resolveLinkBuilder(resolvers: Traversable[LinkResolver[A]]): Option[LinkBuilder] = {
+            resolvers.headOption match {
+              case Some(resolver) => resolver.apply(instance, linkBuilderTemplate).orElse(resolveLinkBuilder(resolvers.tail))
+              case None => error(format("could not determine link resolver for type %s.", instance.getClass))
+            }
+          }
+          val clazzManifest = fromClass(instance.getClass).asInstanceOf[ClassManifest[A]]
+          val resolvers = context.resolverFor(clazzManifest)
+          for (linkBuilder <- resolveLinkBuilder(resolvers);
+               baseUri <- linkBuilder.build;
+               uri <- chain(Some(UriBuilder.fromUri(baseUri))))
+                 yield uri
         }
         // if a uri builder is defined the caller already defined how the sub resource is resolved
         // otherwise use the fallback which itself uses the defined sequence of link resolvers
-        builder.flatMap { defined =>
-          chain(Some(defined))
-        }.orElse {
-          fallback
+        builder match {
+          case Some(_) => chain(builder)
+          case None => fallback
         }
       }
     }
