@@ -19,6 +19,35 @@ import Filesystem._
 
 import org.apache.sanselan._
 import org.apache.sanselan.common._
+import org.apache.sanselan.formats.tiff.constants.TiffTagConstants
+import org.apache.sanselan.formats.jpeg.JpegImageMetadata
+import org.apache.sanselan.formats.tiff.constants.ExifTagConstants
+import org.apache.sanselan.formats.jpeg._
+
+import org.mediahub.util.Dates._
+import org.joda.time._
+import org.joda.time.format.DateTimeFormat
+
+object RichSanselan {
+
+  private lazy val dateformat = DateTimeFormat.forPattern("yyyy:MM:dd HH:mm:ss");
+
+  implicit def jpegmetadataToRichMetadata(meta: JpegImageMetadata) = new {
+    
+
+    def creationDate: Option[DateTime] = {
+      try {
+        for(field <- Option(meta.findEXIFValue(ExifTagConstants.EXIF_TAG_CREATE_DATE));
+            value <- Option(field.getValue))
+              yield {
+            dateformat.parseDateTime(value.toString.trim)
+          }
+      } catch {
+        case ex: IllegalArgumentException => None
+      }
+    }
+  }
+}
 
 /**
  * scan a directory recursivly
@@ -38,7 +67,7 @@ class ImagesTest {
 
   @Test
   def example {
-    for(image <- imagesRecursively(new File("/media/fotos/2010"))) {
+    for(image <- imagesRecursively(new File(System.getProperty("user.home") + "/Bilder"))) {
       val time = System.currentTimeMillis
       println(image + ", time taken: " + (System.currentTimeMillis - time) + " ms")
     }
@@ -47,33 +76,63 @@ class ImagesTest {
   def imagesRecursively(resource: ResourceLike): Traversable[Image] = {
     resource match {
       case dir: DirectoryResource => dir.childs.toStream.flatMap(imagesRecursively)
-      case resource: Resource => image(resource).toIterable
+      case resource: Resource => maybeImage(resource).toIterable
       case other => Seq.empty
     }
   }
 
-  def image(res: Resource): Option[Image] = {
-    if(mimeType(res.name).getPrimaryType == "image") {
-      val in = res.inputStream
-      try {
-        Some(new Image {
-            lazy val dimension: (Int, Int) = {
-              res.read { in =>
-                val info = Sanselan.getImageInfo(in, res.uri.toString)
-                (info.getWidth, info.getHeight)
-              }
-            }
-            
-            lazy val resource = res
-            
-            lazy val width = dimension._1
-            lazy val height = dimension._2
-
-            override def toString = "image " + resource + ", width: " + width + ", height: " + height
-          })
-      } finally {
-        in.close
+  def maybeImage(res: Resource): Option[Image] = {
+    
+    def image = new Image {
+      import RichSanselan._
+      /**
+       * run the given function if the image info could be resolved.
+       */
+      def withImageInfo[A](f: ImageInfo => A): Option[A] = {
+        res.read { in =>
+          try {
+            Some(f(Sanselan.getImageInfo(in, res.uri.toString)))
+          } catch {
+            // TODO: log error or provide some reporting
+            case ex: ImageReadException => None
+          }
+        }
       }
+
+      /**
+       * run the given function if the image info could be resolved.
+       */
+      def withMetadata[A](pf: PartialFunction[IImageMetadata, Option[A]]): Option[A] = {
+        res.read { in =>
+          try {
+            val metadata = Sanselan.getMetadata(in, res.uri.toString)
+            if(pf.isDefinedAt(metadata)) {
+              pf(metadata)
+            } else {
+              None
+            }
+          } catch {
+            // TODO: log error or provide some reporting
+            case ex: ImageReadException => None
+          }
+        }
+      }
+
+      override lazy val dimension = withImageInfo { info =>
+        Dimension(info.getWidth, info.getHeight)
+      }
+
+      override lazy val createdAt = withMetadata {
+        case jpeg: JpegImageMetadata => jpeg.creationDate
+      }
+
+      lazy val resource = res
+
+      override def toString = "image " + resource + ", " + dimension + ", createdAt: " + createdAt
+    }
+
+    if(mimeType(res.name).getPrimaryType == "image") {
+      Some(image)
     } else {
       None
     }
@@ -87,22 +146,8 @@ class ImagesTest {
 
 trait Image {
   def resource: Resource
-  def width: Int
-  def height: Int
+  def dimension: Option[Dimension] = None
+  def createdAt: Option[DateTime] = None
 }
 
-import org.apache.sanselan.formats.tiff.constants.TiffTagConstants
-import org.apache.sanselan.formats.jpeg.JpegImageMetadata
-
-object RichSanselan {
-  implicit def metadataToRichMetadata(meta: IImageMetadata) = new {
-
-    def resolution = meta match {
-      case jpeg: JpegImageMetadata => jpeg.findEXIFValue(TiffTagConstants.TIFF_TAG_XRESOLUTION)
-    }
-
-    def date = meta match {
-      case jpeg: JpegImageMetadata => jpeg.findEXIFValue(TiffTagConstants.TIFF_TAG_XRESOLUTION)
-    }
-  }
-}
+case class Dimension(width: Int, height: Int)
