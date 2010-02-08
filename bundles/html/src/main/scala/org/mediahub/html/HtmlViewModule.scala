@@ -9,6 +9,7 @@ import org.mediahub.views._
 import scala.xml.NodeSeq
 
 import org.mediahub.web.links.LinkRenderer
+import LinkRenderer._
 
 import org.mediahub.resources.BundleResources._
 import org.osgi.framework.Bundle
@@ -126,7 +127,7 @@ abstract class HtmlViewModule extends ViewModule with ViewRendererProxy with Lin
     }
 
     bindView(references).of[Any] to { self =>
-      <link rel="stylesheet" type="text/css" href={"/css/styles.css" in bundle} />
+      <link rel="stylesheet" type="text/css" href={linkTo("/css/styles.css" in bundle)} />
     }
   }
 }

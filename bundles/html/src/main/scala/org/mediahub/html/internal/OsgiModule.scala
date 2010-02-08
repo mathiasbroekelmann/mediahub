@@ -19,6 +19,7 @@ import java.util.Locale
 import org.mediahub.views.{CustomizableViewRenderer, ViewRenderer}
 
 import org.mediahub.html._
+import org.mediahub.web.links.LinkRenderer
 
 import org.mediahub.rest.{RestRegistrar, RestRegistry}
 import org.osgi.framework.Bundle
@@ -44,10 +45,12 @@ class OsgiModule extends AbstractModule {
 
   @Provides
   def htmlViewModule(rendererProvider: Provider[ViewRenderer],
+                     linkRendererProvider: Provider[LinkRenderer],
                      @Context contextLocale: Provider[Locale],
                      myBundle: Bundle): HtmlViewModule = {
     new HtmlViewModule {
       def renderer = rendererProvider.get
+      def linkRenderer = linkRendererProvider.get
       def locale = contextLocale.get
       def bundle = myBundle
     }
@@ -65,6 +68,7 @@ class OsgiModule extends AbstractModule {
   def configure {
     bind(export(classOf[HtmlRestRegistrar])).toProvider(service(classOf[HtmlRestRegistrar]).export)
     bind(classOf[CustomizableViewRenderer]).toProvider(service(classOf[CustomizableViewRenderer]).single)
+    bind(classOf[LinkRenderer]).toProvider(service(classOf[LinkRenderer]).single)
     bind(export(classOf[HtmlViewModule])).toProvider(service(classOf[HtmlViewModule]).export)
   }
 }
