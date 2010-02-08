@@ -9,15 +9,18 @@ import java.io.File
 
 
 object Filesystem {
-  /**
-   * make a ResourceLike instance for a system file.
-   */
-  implicit def fileToResource(file: File): FilesystemResource = file match {
-    case file if file.isFile => new FileResource(file)
-    case file if file.isDirectory => new DirectoryResource(file)
-    case _ => error("unknown file type")
+  implicit def resourceOf(file: File): ResourceLike = {
+    someresource(file).getOrElse(error("unknown file type: " + file))
+  }
+
+  implicit def someresource(file: File): Option[ResourceLike] = file match {
+    case file if file.isFile => Some(new FileResource(file))
+    case file if file.isDirectory => Some(new DirectoryResource(file))
+    case _ => None
   }
 }
+
+import Filesystem._
 
 /**
  * identifies a file system resource.
@@ -44,9 +47,8 @@ case class DirectoryResource(val file: File) extends FilesystemResource with Con
    * return all childs of this directory including files and nested directory. this method is not recursive.
    */
   def childs = {
-    def resourceOf(file: File): ResourceLike = Filesystem.fileToResource(file)
     file.listFiles match {
-      case files: Array[File] => for(file <- files) yield resourceOf(file)
+      case files: Array[File] => for(file <- files; resource <- someresource(file)) yield resource
       case _ => Nil
     }
   }
