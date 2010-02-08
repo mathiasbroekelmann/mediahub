@@ -17,6 +17,10 @@ import java.io.File
 import org.mediahub.resources._
 import Filesystem._
 
+import org.mediahub.util.Dates._
+
+import org.mediahub.jcr.JcrDsl._
+
 import org.apache.sanselan._
 import org.apache.sanselan.common._
 import org.apache.sanselan.formats.tiff.constants.TiffTagConstants
@@ -27,6 +31,13 @@ import org.apache.sanselan.formats.jpeg._
 import org.mediahub.util.Dates._
 import org.joda.time._
 import org.joda.time.format.DateTimeFormat
+
+import javax.jcr.{Session => JcrSession}
+import javax.jcr.SimpleCredentials
+import javax.jcr.{Repository, Node}
+import Repository._
+
+import org.apache.jackrabbit.core.TransientRepository
 
 object RichSanselan {
 
@@ -57,26 +68,51 @@ object RichSanselan {
  */
 class ImagesTest {
 
+  var session: JcrSession = _
+  var repository: Repository = _
+  var node: Node = _
+
   @Before
-  def setUp {
+  def setUp: Unit = {
+    //repository = new TransientRepository(new File("target/jcr"))
+    //session = login("someuser", "password")
+    //node = session.getRootNode() |= "test"
   }
 
   @After
-  def tearDown {
+  def tearDown: Unit = {
+    //node.remove
+    //session.save
+    //session.logout
+  }
+
+  def login(username: String, password: String) = {
+    val credentials = new SimpleCredentials(username, password.toCharArray)
+    repository.login(credentials)
   }
 
   @Test
   def example {
-    for(image <- imagesRecursively(new File(System.getProperty("user.home") + "/Bilder"))) {
+    val base = new File(System.getProperty("user.home") + "/Bilder")
+    for(image <- imagesRecursively(None)(base)) {
       val time = System.currentTimeMillis
       println(image + ", time taken: " + (System.currentTimeMillis - time) + " ms")
     }
   }
 
-  def imagesRecursively(resource: ResourceLike): Traversable[Image] = {
+  implicit def richDirectoryResource(dir: DirectoryResource) = new {
+    def childOf(givenParent: Option[Album]) = new Album {
+      def name = dir.name
+      override def lastModified = for(date <- dir.lastModified) yield (date)
+      override def parent = givenParent
+    }
+  }
+  
+  def imagesRecursively(album: Option[Album])(resource: ResourceLike): Traversable[(Option[Album], Image)] = {
+    println("imagesRecursively" + album + ", " + resource)
     resource match {
-      case dir: DirectoryResource => dir.childs.toStream.flatMap(imagesRecursively)
-      case resource: Resource => maybeImage(resource).toIterable
+      case dir: DirectoryResource => dir.childs.toStream.flatMap(imagesRecursively(Some(dir.childOf(album))))
+      case resource: Resource => for(image <- maybeImage(resource)) yield (album, image)
       case other => Seq.empty
     }
   }
@@ -151,3 +187,43 @@ trait Image {
 }
 
 case class Dimension(width: Int, height: Int)
+
+trait Album {
+  /**
+   * the name of the album
+   */
+  def name: String
+
+  /**
+   * the path from the root album down to this album
+   */
+  def path: String = (parent match {
+    case None => Seq(name)
+    case Some(p) => name +: p.pathArcs
+  }).reverse.mkString("/")
+
+  /**
+   * @return the path arcs having this album name as the last element (top->bottom)
+   */
+  def pathArcs: Seq[String] = (parent match {
+    case None => Seq(name)
+    case Some(p) => name +: p.pathArcs
+  }).reverse
+
+  /**
+   * @return the parents of this album from top to bottom
+   */
+  def parents: Seq[Album] = (parent match {
+    case None => Nil
+    case Some(p) => p +: p.parents
+  }).reverse
+
+  /**
+   * the parent of the album. None if there is no parent.
+   */
+  def parent: Option[Album] = None
+
+  def lastModified: Option[DateTime] = None
+
+  override def toString = "Album at " + path
+}
