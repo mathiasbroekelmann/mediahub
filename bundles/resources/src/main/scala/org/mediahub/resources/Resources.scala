@@ -36,7 +36,8 @@ trait ResourceLike {
   def uri: URI
   
   /**
-   * the name of the resource.
+   * The name of the resource.
+   * Which is the part after the last slash in the path of the uri.
    */
   def name: String = uri.getPath.split('/').last
 
@@ -54,6 +55,25 @@ trait ResourceLike {
    * optionally provide the time in millis since 1st jan 1970 when this resource was last modified.
    */
   def lastModified: Option[Long]
+
+  /**
+   * compare the uri of the resources.
+   * If overriden in subclasses you must also override #canEqual
+   */
+  override def equals(other: Any) = other match {
+    case r: ResourceLike if r.canEqual(this) => r.uri == uri
+    case _ => false
+  }
+
+  /**
+   * delegates to the hashcode of the uri
+   */
+  override def hashCode = uri.hashCode
+
+  /**
+   * overwrite in subclasses if #equals is overriden.
+   */
+  def canEqual(other: Any) = other.isInstanceOf[ResourceLike]
 }
 
 /**

@@ -9,4 +9,4 @@ target
 *.ipr
 *.ipw
 *.iws
-derby.log
+*.log

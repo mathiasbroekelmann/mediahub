@@ -5,6 +5,8 @@
 
 package org.mediahub.jcr
 
+import scala.collection.JavaConversions._
+
 import org.mediahub.util.Dates._
 
 import javax.jcr.{Node, Repository, Property, Value, PropertyType}
@@ -113,6 +115,30 @@ case object Indefinite extends IdentifierStability { val id = IDENTIFIER_STABILI
 class RichNode(node: Node) {
 
   import JcrDsl._
+
+  private def traverseAs[A](factory: => java.util.Iterator[_])(implicit clazz: ClassManifest[A]): Traversable[A] = {
+    factory.asInstanceOf[java.util.Iterator[A]].toStream
+  }
+
+  /**
+   * get all child nodes.
+   */
+  def nodes: Traversable[Node] =
+    traverseAs[Node](node.getNodes)
+
+  /**
+   * get all child nodes.
+   * @see Node#getNodes(String)
+   */
+  def nodes(namePattern: String): Traversable[Node] =
+    traverseAs[Node](node.getNodes(namePattern))
+
+  /**
+   * get all child nodes.
+   * @see Node#getNodes(String[])
+   */
+  def nodes(namePattern: String, morePatterns: String*): Traversable[Node] =
+    traverseAs[Node](node.getNodes((namePattern +: morePatterns).toArray))
 
   /**
    * access a node at the given relative path.
@@ -248,8 +274,24 @@ class RichNode(node: Node) {
   def --(propertyNames: String*) =
     for(name <- propertyNames) yield(this -(name))
 
-  def apply(propertyName: String): Property =
+  /**
+   * returns the property for the given property name.
+   * @throws a PathNotFoundException if the property does not exist.
+   */
+  def apply(propertyName: String): Property = {
     node.getProperty(propertyName)
+  }
+
+  /**
+   * @return Some(property) if the property for the given name exists. Otherwise return None
+   */
+  def get(propertyName: String): Option[Property] = {
+    if(node.hasProperty(propertyName)) {
+      Some(node.getProperty(propertyName))
+    } else {
+      None
+    }
+  }
 
   /**
    * returns the string property value of the given property name.
@@ -257,6 +299,40 @@ class RichNode(node: Node) {
    */
   def string(propertyName: String): Option[String] =
     strings(propertyName).headOption
+
+  def boolean(propertyName: String): Option[Boolean] =
+    booleans(propertyName).headOption
+
+  def booleans(propertyName: String): Seq[Boolean] =
+    valuesOf(propertyName) {v => Option(v.getBoolean)}
+
+  def date(propertyName: String): Option[java.util.Calendar] =
+    dates(propertyName).headOption
+
+  def dates(propertyName: String): Seq[java.util.Calendar] =
+    valuesOf(propertyName) {v => Option(v.getDate)}
+
+  def decimal(propertyName: String): Option[java.math.BigDecimal] =
+    decimals(propertyName).headOption
+
+  def decimals(propertyName: String): Seq[java.math.BigDecimal] =
+    valuesOf(propertyName) {v => Option(v.getDecimal)}
+
+  def long(propertyName: String): Option[Long] =
+    longs(propertyName).headOption
+
+  def longs(propertyName: String): Seq[Long] =
+    valuesOf(propertyName) {v => Option(v.getLong)}
+
+  def reference(propertyName: String): Option[Node] =
+    references(propertyName).headOption
+
+  def references(propertyName: String): Seq[Node] = {
+    valuesOf(propertyName) {v => 
+      for(identifier <- Option(v.getString))
+        yield node.getSession.getNodeByIdentifier(identifier)
+    }
+  }
 
   /**
    * returns all string value of the given property name.
