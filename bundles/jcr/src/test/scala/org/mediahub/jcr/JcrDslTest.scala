@@ -144,7 +144,7 @@ class JcrTest {
       node.remove
       readsession.save
       println("finished reading properties")
-    }finally {
+    } finally {
       readsession.logout
     }
   }
