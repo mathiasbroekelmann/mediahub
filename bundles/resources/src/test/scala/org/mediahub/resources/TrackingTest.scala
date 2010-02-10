@@ -36,6 +36,7 @@ class TrackingTest {
     for ((resource, node) <- resourcesWithNode) {
       println("node: " + node + ", resource: " + resource)
     }
+    session.save
   }
 
   def recursivly(resource: ResourceLike): Traversable[Resource] = {
