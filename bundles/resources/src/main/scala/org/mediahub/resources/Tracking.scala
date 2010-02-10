@@ -92,7 +92,10 @@ object ResourceTracking {
 
     // TODO: thats not nice. make the jcr dsl smarter so this is a charme
     val resourcesNode = (base |= pathToResourcesOfSameMd5)
-    val existingNode = resourcesNode.nodes.find(_.string("uri") == resource.uri)
+    val uriToFindNodeFor = Some(resource.uri.toString)
+    val existingNode = resourcesNode.nodes.find { node =>
+      node.string("uri") == uriToFindNodeFor
+    }
     existingNode match {
       case Some(node) => node
       case None => {
