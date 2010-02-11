@@ -52,6 +52,14 @@
         <artifactId>cap-objectserver</artifactId>
         <version>5.2.678</version>
     </dependency>
+    <dependency>
+        <groupId>org.mediahub.bundles</groupId>
+        <artifactId>org.mediahub.cache</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>com.google.inject</groupId>
+        <artifactId>guice</artifactId>
+    </dependency>
   </dependencies>
 
 </project>
