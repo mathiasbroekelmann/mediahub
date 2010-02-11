@@ -15,7 +15,7 @@ import scala.xml._
 
 object Content extends Doctype[Content]("Content")
 
-trait Content extends ContentBean {
+trait Content extends com.coremedia.objectserver.beans.ContentBean {
 
   /**
    * @return the content itself.
