@@ -60,6 +60,11 @@ case class DirectoryResource(val file: File) extends FilesystemResource with Con
  * a file resource wraps a file in the local file system.
  */
 case class FileResource(val file: File) extends FilesystemResource with Resource {
+
   override def size = if (exists) file.length else error("file " + this + " does not exist")
   override def toString = format("File %s, size=%d", url, size)
+}
+
+object FileResource {
+  def apply(uri: java.net.URI): FileResource = FileResource(new File(uri))
 }

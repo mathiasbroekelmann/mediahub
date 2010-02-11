@@ -15,6 +15,12 @@ import org.mediahub.jcr.JcrDsl._
 
 import scala.collection.JavaConversions._
 
+trait ResourceListener {
+  def added(resource: Resource, node: Node)
+  def modified(resource: Resource, node: Node)
+  def removed(resource: Resource, node: Node)
+}
+
 /**
  * Service definition to track resources.
  * Resources will be identified through their uri.
@@ -46,7 +52,14 @@ object ResourceTracking {
     def md5Hex: String = uri.toString.md5Hex
   }
 
+  /**
+   * collect the given resources.
+   */
   def collect(resources: Traversable[Resource]) = new {
+
+    /**
+     * use the given base node to store the references to the collected resources.
+     */
     def into(baseNode: Node): Traversable[(Resource, Node)] = {
       for(resource <- resources)
         yield (resource, resolveResourceNode(baseNode, resource))
@@ -54,11 +67,54 @@ object ResourceTracking {
   }
 
   /**
+   * get the resources that have been collected previously.
+   */
+  def resources = new {
+    /**
+     * get the resources below the node.
+     * @param baseNode the node that is used as the base where the resources are stored.
+     * @param factory create the resource for the given uri.
+     *
+     * @return a tuple of the resource and the corresponsing node that identifies the resource.
+     *          Use the identifier of the node to referr to this resource
+     */
+    def from(baseNode: Node) (factory: PartialFunction[URI, Resource]): Traversable[(Resource, Node)] = {
+
+      /**
+       * create the resource for the given resource node.
+       *
+       * @return None if no such resource could be created.
+       */
+      def resourceFrom(node: Node): Option[Resource] = {
+
+        def create(uri: URI): Option[Resource] = {
+          if(factory.isDefinedAt(uri)) {
+            Some(factory(uri))
+          } else {
+            None
+          }
+        }
+
+        for(uriString <- node.string("uri");
+            resource <- create(URI.create(uriString)))
+              yield (resource)
+      }
+
+      // we have a three level hierachy of nodes to cluster the resources.
+      for(first <- baseNode.nodes.toStream;
+          second <- first.nodes.toStream;
+          resourcesNode <- second.nodes.toStream;
+          resourceNode <- resourcesNode.nodes.toStream;
+          resource <- resourceFrom(resourceNode))
+            yield (resource, resourceNode)
+    }
+  }
+
+  /**
    * get or create the resource node for the given resource somewhere below base.
    * populate is used to when the does not exist to fill the properties in the node.
    */
-  def resolveResourceNode(base: Node, resource: Resource): Node = {
-    val md5Hex = resource.uri.md5Hex
+  private def resolveResourceNode(base: Node, resource: Resource): Node = {
 
     def resourceNodeFactory(node: Node, name: String): Node = {
       node.addNode(name, "nt:resource")
@@ -83,31 +139,43 @@ object ResourceTracking {
       names.find(available _).getOrElse(error("could not determine an unique name for the node of " + resource))
     }
 
-    // make a path like this: ABC/DEF/ABCDEF123456789
-    val partLen = 2
-    val pathToResourcesOfSameMd5 = format("%s/%s/%s",
-                                          md5Hex.take(partLen),
-                                          md5Hex.drop(partLen).take(partLen),
-                                          md5Hex)
+    /**
+     * create a node for the resource
+     */
+    def createNodeForResource(in: Node): Node = {
+      val existingNames = in.nodes.map(_.getName)
+      val node = in |= uniqueName(existingNames, resource.name, "%s_%d")
+      node ++ ("uri" -> resource.uri)
+      for(lastModified <- resource.lastModified) {
+        node ++ ("lastModified" -> lastModified)
+      }
+      node
+    }
 
-    // TODO: thats not nice. make the jcr dsl smarter so this is a charme
-    val resourcesNode = (base |= pathToResourcesOfSameMd5)
+    /**
+     * make a path like this: ABC/DEF/ABCDEF123456789
+     */
+    def pathToResources = {
+      val md5Hex = resource.uri.md5Hex
+      val partLen = 2
+      // TODO: thats not nice. make the jcr dsl smarter so this is a charme
+      format("%s/%s/%s", 
+             md5Hex.take(partLen),
+             md5Hex.drop(partLen).take(partLen),
+             md5Hex)
+    }
+
+    // get the node that contains the resources sharing the same path
+    val resourcesNode = (base |= pathToResources)
+    
+    // find an existing node that shares the same uri
     val uriToFindNodeFor = Some(resource.uri.toString)
-    val existingNode = resourcesNode.nodes.find { node =>
-      node.string("uri") == uriToFindNodeFor
+    val existingNode = resourcesNode.nodes.find { 
+      _.string("uri") == uriToFindNodeFor
     }
-    existingNode match {
-      case Some(node) => node
-      case None => {
-          val existingNames = resourcesNode.nodes.map(_.getName)
-          val node = resourcesNode |= uniqueName(existingNames, resource.name, "%s_%d")
-          node ++ ("uri" -> resource.uri)
-          for(lastModified <- resource.lastModified) {
-            node ++ ("lastModified" -> lastModified)
-          }
-          node
-        }
-    }
+    
+    // return the node or create a new node for the resource
+    existingNode getOrElse createNodeForResource(resourcesNode)
   }
 
 }

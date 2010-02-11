@@ -17,7 +17,7 @@ import javax.jcr.Repository
 import Repository._
 import javax.jcr.{Session => JcrSession}
 import javax.jcr.SimpleCredentials
-import javax.jcr.{Node, Value, PropertyType}
+//import javax.jcr.{Node, Value, PropertyType}
 import org.apache.jackrabbit.core.TransientRepository
 
 import scala.collection.JavaConversions._
@@ -29,14 +29,29 @@ import org.mediahub.jcr.JcrDsl._
 class TrackingTest {
 
   @Test
-  def example {
-    val resources = recursivly(new File(System.getProperty("user.home") + "/Bilder"))
+  def testCollect {
+    val resources = recursivly(new File("/media/fotos")) // new File(System.getProperty("user.home") + "/Bilder")
     val base = session.getRootNode |= "resources"
     val resourcesWithNode = collect(resources).into(base)
+    val start = System.currentTimeMillis
     for ((resource, node) <- resourcesWithNode) {
-      println("node: " + node + ", resource: " + resource)
+      //println("node: " + node + ", resource: " + resource)
     }
+    println("time for collecting resources " + resourcesWithNode.size + ": " + (System.currentTimeMillis - start) + " ms")
     session.save
+  }
+
+  @Test
+  def testCollectedResources {
+    val base = session.getRootNode |= "resources"
+    val resourcesWithNode = resources.from(base) {
+      case uri if uri.getScheme == "file" => FileResource(uri)
+    }
+    val start = System.currentTimeMillis
+    for ((resource, node) <- resourcesWithNode) {
+      //println("collected node: " + node + ", resource: " + resource)
+    }
+    println("time for traversing resources " + resourcesWithNode.size + ": in store: " + (System.currentTimeMillis - start) + " ms")
   }
 
   def recursivly(resource: ResourceLike): Traversable[Resource] = {
