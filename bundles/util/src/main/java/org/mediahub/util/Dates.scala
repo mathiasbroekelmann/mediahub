@@ -39,4 +39,8 @@ object Dates {
   implicit def readableInstantToDate(dateTime: ReadableInstant) = dateTime.toInstant.toDate
   implicit def readableInstantToMillis(dateTime: ReadableInstant) = dateTime.getMillis
   implicit def readableInstantToCalendar(dateTime: ReadableInstant) = dateTime.toInstant.toDateTime.toCalendar(Locale.getDefault)
+
+  implicit def calendarToDate(calendar: Calendar) = calendar.getTime
+  implicit def calendarToMillis(calendar: Calendar) = calendar.getTimeInMillis
+  implicit def calendarToDateTime(calendar: Calendar) = new DateTime(calendar)
 }
